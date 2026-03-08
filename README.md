@@ -139,9 +139,15 @@ cdk bootstrap
 cdk deploy
 ```
 
-After deployment, the terminal will print your Lambda URL:
+### AWS Amplify (Frontend)
+The frontend is deployed via **AWS Amplify** for global edge delivery:
+- **URL**: [https://prototype.d2c9v8a7b6c5d4.amplifyapp.com](https://github.com/Dibya81/consensus-engine) (Replace with your actual Amplify domain)
+- **CI/CD**: Auto-deploys on every push to the `prototype` branch.
+
+### AWS Lambda URL (Backend)
+The terminal will print your regional endpoint after `cdk deploy`:
 ```
-ConsensusBedrockStack.ConsensusAPIEndpoint = https://xxxxxxxx.lambda-url.us-east-1.on.aws/
+ConsensusBedrockStack.ConsensusAPIEndpoint = https://6u6a3ub4qmn4qppzc7hdsnflqy0lkold.lambda-url.us-east-1.on.aws/
 ```
 
 ---

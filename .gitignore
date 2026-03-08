@@ -25,3 +25,10 @@ dist-ssr/
 .env.development.local
 .env.test.local
 .env.production.local
+
+# AWS / Deployment
+.amplify/
+amplify/
+build/
+.next/
+serverless/
