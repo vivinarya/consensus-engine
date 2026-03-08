@@ -1,6 +1,8 @@
-
 import os
 import aws_cdk as cdk
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from consensus_bedrock_backend.consensus_bedrock_stack import ConsensusBedrockStack
 

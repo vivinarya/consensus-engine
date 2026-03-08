@@ -1,3 +1,4 @@
+import os
 from aws_cdk import (
     Stack,
     aws_lambda as _lambda,
@@ -20,11 +21,11 @@ class ConsensusBedrockStack(Stack):
             timeout=Duration.seconds(30),
             memory_size=512,
             environment={
-                "DB_HOST": "consensus-engine-db.cluster-cspa4wikokmu.us-east-1.rds.amazonaws.com",
-                "DB_NAME": "postgres",
-                "DB_PORT": "5432",
-                "DB_SECRET_ARN": "arn:aws:secretsmanager:us-east-1:192492986116:secret:rds-db-credentials/cluster-4MDJRFADQPWNMEAUX5Y3WSCC4A/postgres/1772819837478-rhzElY",
-                "DB_CLUSTER_ARN": "arn:aws:rds:us-east-1:192492986116:cluster:consensus-engine-db"
+                "DB_HOST": os.getenv("DB_HOST"),
+                "DB_NAME": os.getenv("DB_NAME", "postgres"),
+                "DB_PORT": os.getenv("DB_PORT", "5432"),
+                "DB_SECRET_ARN": os.getenv("DB_SECRET_ARN"),
+                "DB_CLUSTER_ARN": os.getenv("DB_CLUSTER_ARN")
             }
         )
 
@@ -41,8 +42,8 @@ class ConsensusBedrockStack(Stack):
                 "rds-data:BatchExecuteStatement"
             ],
             resources=[
-                "arn:aws:secretsmanager:us-east-1:192492986116:secret:rds-db-credentials/cluster-4MDJRFADQPWNMEAUX5Y3WSCC4A/postgres/1772819837478-rhzElY",
-                "arn:aws:rds:us-east-1:192492986116:cluster:consensus-engine-db"
+                os.getenv("DB_SECRET_ARN"),
+                os.getenv("DB_CLUSTER_ARN")
             ]
         ))
 
