@@ -1,0 +1,270 @@
+.messageRow {
+  display: flex;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.userRow {
+  justify-content: flex-end;
+}
+
+.aiRow {
+  justify-content: flex-start;
+}
+
+.comparisonRow {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* User Bubble */
+.userContent {
+  background-color: var(--engine-accent);
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 20px 20px 4px 20px;
+  max-width: 70%;
+  color: #ffffff;
+  font-size: 1rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
+}
+
+.msgAttachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.msgAttChip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* AI Single Content */
+.aiContent {
+  display: flex;
+  gap: 1rem;
+  max-width: 85%;
+}
+
+.aiAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background-color: #2c2c2c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.aiText {
+  color: var(--engine-text-main);
+  line-height: 1.65;
+  font-size: 1rem;
+}
+
+.aiText p {
+  margin-bottom: 1rem;
+}
+
+.aiText code {
+  background-color: var(--engine-bg-color);
+  border: 1px solid var(--engine-border);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  color: var(--engine-accent);
+}
+
+/* COMPARISON LAYOUT */
+.comparisonContainer {
+  width: 100%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-left: 2.75rem; /* Better alignment with avatar text */
+}
+
+.deepDiveBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #8b5cf6;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deepDiveLoading {
+  font-size: 0.75rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.comparisonActions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.deepDiveButton {
+  background-color: var(--engine-text-main);
+  border: none;
+  color: var(--engine-panel-bg);
+  padding: 0.8rem 1.75rem;
+  border-radius: 99px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.deepDiveButton:hover {
+  background-color: var(--engine-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(217, 119, 87, 0.2);
+}
+
+.judgeBlock {
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.judgeHeader {
+  color: var(--engine-accent);
+  font-weight: 500;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dualOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .dualOptions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.optionCard {
+  background-color: var(--engine-panel-bg);
+  border: 1.5px solid var(--engine-border);
+  border-radius: 20px;
+  padding: 1.75rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.optionCard:hover {
+  border-color: var(--engine-accent);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+.optionCard.selected {
+  border-color: var(--engine-accent);
+  background-color: var(--engine-panel-bg);
+  box-shadow: 0 10px 40px rgba(217, 119, 87, 0.12);
+}
+
+.modelBadge {
+  font-size: 0.7rem;
+  background-color: var(--engine-bg-color);
+  border: 1px solid var(--engine-border);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  width: fit-content;
+  margin-bottom: 1.25rem;
+  color: var(--engine-text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.selectIndicator {
+  margin-top: auto;
+  padding-top: 1rem;
+  color: var(--engine-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.optionCard:hover .selectIndicator {
+  opacity: 1;
+}
+
+.optionCard.selected .selectIndicator {
+  opacity: 1;
+}
+
+.cacheBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.15));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #f59e0b;
+  padding: 0.3rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+  animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+  0% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 0.85; transform: scale(1); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

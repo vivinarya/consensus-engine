@@ -8,3 +8,20 @@ __pycache__
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# IDEs and OS
+.DS_Store
+.vscode/
+
+# Node/React
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

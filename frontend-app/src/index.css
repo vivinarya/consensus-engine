@@ -1,0 +1,107 @@
+:root {
+  /* Global Typography */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* Theme Tokens: Landing Page (Light Mode / Bright) */
+  --landing-bg-linear: linear-gradient(135deg, #FAF9F6 0%, #F5F2EE 100%);
+  --landing-text-main: #2C2C2C;
+  --landing-text-muted: #6B6B6B;
+  --landing-accent: #D97757; /* Burnt Orange */
+  
+  /* Theme Tokens: Engine Page (MOSS Design / Warm Light) */
+  --engine-bg-color: #FFF5F0; /* Soft Peach */
+  --engine-panel-bg: #FFFFFF;
+  --engine-border: #F0E8E1;
+  --engine-text-main: #2C2C2C;
+  --engine-text-muted: #888888;
+  --engine-accent: #D97757;
+  --engine-glow: rgba(217, 119, 87, 0.4); 
+}
+
+[data-theme='dark'] {
+  --engine-bg-color: #000000; /* Pure Black */
+  --engine-panel-bg: #121212;
+  --engine-border: #222222;
+  --engine-text-main: #EAEAEA;
+  --engine-text-muted: #999999;
+  --engine-accent: #E08262;
+  --engine-glow: rgba(224, 130, 98, 0.4); 
+}
+
+:root {
+
+  /* Structural Variables */
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--engine-bg-color); /* Default body to dark, Landing handles its own bg */
+  color: var(--engine-text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  transition: var(--transition-smooth);
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--engine-panel-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--engine-border);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
+}
+
+/* Base custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
