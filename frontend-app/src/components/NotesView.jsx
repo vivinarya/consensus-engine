@@ -266,7 +266,7 @@ const NotesView = ({ username }) => {
       animate={{ opacity: 1, y: 0 }}
       style={{
         flex: 1,
-        padding: '5rem 3rem 2rem 3rem',
+        padding: 'clamp(4rem,8vw,5rem) clamp(1rem,4vw,3rem) 2rem clamp(1rem,4vw,3rem)',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.5rem',
@@ -276,11 +276,18 @@ const NotesView = ({ username }) => {
         height: '100%',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <StickyNote size={28} color="var(--engine-accent)" /> Notes Hub
+      <style>{`
+        @media (max-width: 768px) {
+          .notes-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .notes-toolbar { flex-wrap: wrap !important; }
+          .notes-flashcard-btn span { display: none; }
+        }
+      `}</style>
+      <div className="notes-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'clamp(1.4rem,4vw,2rem)', whiteSpace: 'nowrap' }}>
+          <StickyNote size={24} color="var(--engine-accent)" /> Notes Hub
         </h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="notes-toolbar" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <div style={{ color: 'var(--engine-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
             {isSaving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
             {isSaving ? 'Saving...' : 'Saved'}
@@ -300,13 +307,15 @@ const NotesView = ({ username }) => {
                 borderRadius: '8px',
                 cursor: (isAnalyzing || !noteContent.trim()) ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
+                fontSize: '0.9rem',
                 opacity: (!noteContent.trim()) ? 0.5 : 1
               }}
             >
-              {isAnalyzing && analysisMode === 'analyze' ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />} 
+              {isAnalyzing && analysisMode === 'analyze' ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} 
               {isAnalyzing && analysisMode === 'analyze' ? 'Analyzing...' : 'AI Analyze'}
             </button>
             <button 
+              className="notes-flashcard-btn"
               onClick={() => handleAnalyzeNotes('flashcards')}
               disabled={isAnalyzing || !noteContent.trim()}
               style={{
@@ -320,11 +329,12 @@ const NotesView = ({ username }) => {
                 borderRadius: '8px',
                 cursor: (isAnalyzing || !noteContent.trim()) ? 'not-allowed' : 'pointer',
                 fontWeight: '600',
+                fontSize: '0.9rem',
                 opacity: (!noteContent.trim()) ? 0.5 : 1
               }}
             >
-              {isAnalyzing && analysisMode === 'flashcards' ? <Loader2 size={16} className="spin" /> : <Library size={16} />} 
-              {isAnalyzing && analysisMode === 'flashcards' ? 'Generating...' : 'Flashcards'}
+              {isAnalyzing && analysisMode === 'flashcards' ? <Loader2 size={15} className="spin" /> : <Library size={15} />} 
+              <span>{isAnalyzing && analysisMode === 'flashcards' ? 'Generating...' : 'Flashcards'}</span>
             </button>
           </div>
         </div>

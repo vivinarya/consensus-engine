@@ -30,7 +30,8 @@
 
 .contentWrapper {
   max-width: 600px;
-  margin-top: -10vh;
+  /* negative margin only on desktop to vertically center content */
+  margin-top: -5vh;
 }
 
 .headline {
@@ -236,14 +237,189 @@
   margin-top: 0.25rem;
 }
 
-/* Responsive adjustments */
+/* ─── Tablet ─── */
 @media (max-width: 1024px) {
-  .headline { font-size: 3.5rem; }
+  .headline { font-size: 3.2rem; }
   .leftPanel { padding: 3rem 4rem; }
   .rightPanel { padding: 1rem; }
 }
+
+/* ─── Mobile ─── */
 @media (max-width: 768px) {
-  .container { flex-direction: column; }
-  .leftPanel { padding: 2rem; min-height: 60vh; }
-  .rightPanel { min-height: 60vh; width: 100vw; }
+  /* Stack panels vertically */
+  .container {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Left panel: readable padding, natural height */
+  .leftPanel {
+    padding: 1.75rem 1.5rem 2rem 1.5rem;
+    min-height: unset;
+    justify-content: flex-start;
+    gap: 1.5rem;
+  }
+
+  /* Logo sits at top */
+  .logo {
+    font-size: 1.4rem;
+  }
+
+  /* Content wrapper doesn't need negative margin on mobile */
+  .contentWrapper {
+    margin-top: 0;
+    max-width: 100%;
+  }
+
+  /* Scale headline for comfortable reading */
+  .headline {
+    font-size: clamp(2.4rem, 9vw, 3.2rem);
+    margin-bottom: 1rem;
+  }
+
+  .highlight::after {
+    height: 18px;
+    bottom: 5px;
+  }
+
+  .description {
+    font-size: 1.05rem;
+    margin-bottom: 2rem;
+    max-width: 100%;
+  }
+
+  /* CTA button full-width on mobile */
+  .ctaButton {
+    width: 100%;
+    justify-content: space-between;
+    padding: 0.9rem 1.25rem;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  /* Right panel: gradient visual area below */
+  .rightPanel {
+    width: 100vw;
+    min-height: 55vw;
+    max-height: 70vw;
+    padding: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .visualContainer {
+    border-radius: 20px;
+    padding: 2.5rem 1rem 1rem 1rem;
+    min-height: unset;
+    height: 100%;
+  }
+
+  /* Pills: allow horizontal scroll, prevent overflow */
+  .topPills {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .topPills::-webkit-scrollbar { display: none; }
+
+  .pill {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Cards: stack vertically, full width */
+  .cardsContainer {
+    flex-direction: row;
+    gap: 0.75rem;
+    max-width: 100%;
+  }
+
+  .glassCard {
+    min-height: 140px;
+    padding: 1rem 1rem 0.75rem 1rem;
+  }
+
+  .cardTop {
+    margin-bottom: 0.75rem;
+  }
+
+  .cardTitle {
+    font-size: 0.85rem;
+    max-width: 90px;
+  }
+
+  .cardMain {
+    font-size: 1.75rem;
+  }
+
+  .cardSub {
+    font-size: 0.8rem;
+  }
 }
+
+/* ─── Very small phones (≤ 480px) ─── */
+@media (max-width: 480px) {
+  .leftPanel {
+    padding: 1.25rem 1.25rem 1.5rem 1.25rem;
+  }
+
+  .headline {
+    font-size: clamp(2rem, 10vw, 2.8rem);
+  }
+
+  /* Give the gradient panel more room so cards fit well */
+  .rightPanel {
+    min-height: 52vw;
+    max-height: unset;
+    height: auto;
+    padding: 0.5rem;
+  }
+
+  .visualContainer {
+    padding: 2.75rem 0.75rem 0.75rem 0.75rem;
+  }
+
+  /* Keep cards SIDE BY SIDE on all phones, just compress them */
+  .cardsContainer {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+
+  /* Each card is compact, no tall min-height */
+  .glassCard {
+    flex: 1;
+    min-height: unset;
+    flex-direction: column;
+    padding: 0.75rem 0.75rem 0.6rem 0.75rem;
+  }
+
+  .cardTop {
+    margin-bottom: 0.5rem;
+  }
+
+  .cardTitle {
+    font-size: 0.75rem;
+    max-width: 80px;
+    line-height: 1.2;
+  }
+
+  .cardIcon {
+    padding: 5px;
+  }
+
+  .cardMain {
+    font-size: 1.4rem;
+  }
+
+  .cardSub {
+    font-size: 0.72rem;
+  }
+}
+

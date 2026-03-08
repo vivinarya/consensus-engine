@@ -173,7 +173,7 @@ const CodeHubView = ({ username }) => {
       animate={{ opacity: 1, scale: 1 }}
       style={{
         flex: 1,
-        padding: '5rem 3rem 2rem 3rem',
+        padding: 'clamp(4rem,8vw,5rem) clamp(1rem,4vw,3rem) 2rem clamp(1rem,4vw,3rem)',
         display: 'flex',
         flexDirection: 'column',
         gap: '1.5rem',
@@ -184,17 +184,25 @@ const CodeHubView = ({ username }) => {
         overflowY: 'hidden'
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <Code size={28} color="var(--engine-accent)" /> Code Hub
+      <style>{`
+        @media (max-width: 768px) {
+          .codehub-header { flex-direction: column !important; align-items: flex-start !important; gap: 0.75rem !important; }
+          .codehub-toolbar { flex-wrap: wrap !important; gap: 0.5rem !important; }
+          .codehub-run-btn span { display: none; }
+          .codehub-ai-btn span { display: none; }
+        }
+      `}</style>
+      <div className="codehub-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'clamp(1.4rem,4vw,2rem)', whiteSpace: 'nowrap' }}>
+          <Code size={24} color="var(--engine-accent)" /> Code Hub
         </h1>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ color: 'var(--engine-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', marginRight: '1rem' }}>
+        <div className="codehub-toolbar" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ color: 'var(--engine-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}>
             {isSaving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
             {isSaving ? 'Syncing...' : 'Synced'}
           </div>
           
-          <div style={{ backgroundColor: 'var(--engine-panel-bg)', padding: '4px', borderRadius: '8px', border: '1px solid var(--engine-border)', display: 'flex', gap: '4px' }}>
+          <div style={{ backgroundColor: 'var(--engine-panel-bg)', padding: '4px', borderRadius: '8px', border: '1px solid var(--engine-border)', display: 'flex', gap: '2px', flexWrap: 'nowrap', overflowX: 'auto' }}>
             {LANGUAGES.map(lang => (
               <button
                 key={lang}
@@ -204,11 +212,12 @@ const CodeHubView = ({ username }) => {
                   color: language === lang ? 'var(--engine-text-main)' : 'var(--engine-text-muted)',
                   border: language === lang ? '1px solid var(--engine-border)' : '1px solid transparent',
                   borderRadius: '6px',
-                  padding: '6px 12px',
-                  fontSize: '0.9rem',
+                  padding: '5px 10px',
+                  fontSize: '0.85rem',
                   fontWeight: language === lang ? '600' : '400',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
                   boxShadow: language === lang ? '0 2px 4px rgba(0,0,0,0.05)' : 'none'
                 }}
               >
@@ -218,45 +227,49 @@ const CodeHubView = ({ username }) => {
           </div>
 
           <button 
+            className="codehub-run-btn"
             onClick={handleExecuteCode}
             disabled={isExecuting || !code.trim()}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.6rem 1.25rem',
+              gap: '0.4rem',
+              padding: '0.55rem 1rem',
               backgroundColor: isExecuting ? 'var(--engine-border)' : '#27c93f',
               color: isExecuting ? '#fff' : '#000',
               border: 'none',
               borderRadius: '8px',
               cursor: (isExecuting || !code.trim()) ? 'not-allowed' : 'pointer',
               fontWeight: '600',
+              fontSize: '0.9rem',
               opacity: (!code.trim()) ? 0.5 : 1
             }}
           >
-            {isExecuting ? <Loader2 size={16} className="spin" /> : <Play size={16} fill="currentColor" />} 
-            {isExecuting ? 'Running...' : 'Run Code'}
+            {isExecuting ? <Loader2 size={15} className="spin" /> : <Play size={15} fill="currentColor" />} 
+            <span>{isExecuting ? 'Running...' : 'Run'}</span>
           </button>
 
           <button 
+            className="codehub-ai-btn"
             onClick={handleAnalyzeCode}
             disabled={isAnalyzing || !code.trim()}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.6rem 1.25rem',
+              gap: '0.4rem',
+              padding: '0.55rem 1rem',
               backgroundColor: isAnalyzing ? 'var(--engine-border)' : 'var(--engine-accent)',
               color: '#fff',
               border: 'none',
               borderRadius: '8px',
               cursor: (isAnalyzing || !code.trim()) ? 'not-allowed' : 'pointer',
               fontWeight: '600',
+              fontSize: '0.9rem',
               opacity: (!code.trim()) ? 0.5 : 1
             }}
           >
-            {isAnalyzing ? <Loader2 size={16} className="spin" /> : <Sparkles size={16} />} 
-            {isAnalyzing ? 'Analyzing...' : 'AI Check'}
+            {isAnalyzing ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} 
+            <span>{isAnalyzing ? 'Analyzing...' : 'AI Check'}</span>
           </button>
         </div>
       </div>

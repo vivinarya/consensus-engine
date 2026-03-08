@@ -101,13 +101,11 @@ class LLMAgent:
     async def generate(self, query: str, attachments: list = None) -> dict:
         loop = asyncio.get_running_loop()
         
-        # Build multimodal content list
+
         content_items = [{"text": query}]
         
         if attachments:
             for att in attachments:
-                # Expecting { "type": "image", "format": "png", "data": "base64..." }
-                # OR { "type": "document", "format": "pdf", "name": "file.pdf", "data": "base64..." }
                 if att['type'] == 'image':
                     import base64
                     content_items.append({
@@ -169,9 +167,9 @@ class MinistralAgent(LLMAgent):
         super().__init__("mistral.ministral-3-8b-instruct", "Mistral AI", "Ministral 8B 3.0")
 
 
-class ClaudeSonnetAgent(LLMAgent):
+class NovaProAgent(LLMAgent):
     def __init__(self):
-        super().__init__("us.amazon.nova-pro-v1:0", "Amazon", "Amazon Nova Pro")
+        super().__init__("amazon.nova-pro-v1:0", "Amazon", "Nova Pro")
 
 
 # --- ORCHESTRATION & SCORING ---
@@ -306,7 +304,7 @@ async def evaluate_worker_response(query: str, answer_text: str, judge: LLMAgent
 async def process_consensus_query(query: str, attachments: list = None):
     llama = Llama4ScoutAgent()
     ministral = MinistralAgent()
-    judge = ClaudeSonnetAgent()
+    judge = NovaProAgent()
     
     # 1. Run both workers simultaneously
     worker_results = await asyncio.gather(
@@ -373,25 +371,38 @@ async def process_consensus_query(query: str, attachments: list = None):
         }
 
 async def process_deep_dive(query: str, llama_content: str, ministral_content: str):
-    judge = ClaudeSonnetAgent()
-    prompt = (
-        f"The user is unsatisfied with the current consensus comparison and needs a deep dive.\n\n"
-        f"Original Question: {query}\n\n"
-        f"Llama Response: {llama_content}\n\n"
-        f"Ministral Response: {ministral_content}\n\n"
-        f"Please provide a comprehensive, expert breakdown of both answers. "
-        f"Identify exactly what is correct or incorrect in each, and give a definitive 'Judge's Recommendation' "
-        f"on which parts the user should trust most. Use clear headings and evidence."
-    )
-    result = await judge.generate(prompt)
-    return {
-        "status": "DEEP_DIVE_RESULT",
-        "content": result['content'],
-        "model_name": result['model_name']
-    }
+    try:
+        judge = NovaProAgent()
+        prompt = (
+            f"You are the Consensus Expert Judge. The user needs a technical deep dive comparison.\n\n"
+            f"Original Question: {query}\n\n"
+            f"Llama 4 Response: {llama_content}\n\n"
+            f"Ministral Response: {ministral_content}\n\n"
+            f"Break down both answers. Identify exactly what is correct or incorrect. "
+            f"Provide a definitive 'Judge's Recommendation' on what to trust. "
+            f"Use professional Markdown with bold headings."
+        )
+        result = await judge.generate(prompt)
+        
+        # Ensure we always return a valid object even if content is weird
+        content = result.get('content', "The Expert Judge was unable to process this specific comparison.")
+        if not content or len(content) < 10:
+             content = "The analysis produced an empty result. Please try again with a more detailed query."
+             
+        return {
+            "status": "DEEP_DIVE_RESULT",
+            "content": content,
+            "model_name": result.get('model_name', judge.name)
+        }
+    except Exception as e:
+        return {
+            "status": "DEEP_DIVE_RESULT",
+            "content": f"Deep Dive Error: {str(e)}",
+            "model_name": "System Error"
+        }
 
 async def simulate_code_execution(code: str, language: str):
-    judge = ClaudeSonnetAgent()
+    judge = NovaProAgent()
     prompt = (
         f"You are a strict, raw compiler and runtime environment for {language}.\n"
         f"Your ONLY job is to execute the code below and print the EXACT console output it would produce.\n"
@@ -415,7 +426,7 @@ async def simulate_code_execution(code: str, language: str):
 async def process_notes_analysis(payload: str, mode: str = 'analyze'):
     llama = Llama4ScoutAgent()
     ministral = MinistralAgent()
-    judge = ClaudeSonnetAgent()
+    judge = NovaProAgent()
     
     if mode == 'flashcards':
         prompt = f"Create a set of revision flashcards from the following notes perfectly mirroring the context. Output ONLY a valid JSON array and absolutely nothing else. Format: [{{\"q\": \"Question Text\", \"a\": \"Answer Text\"}}].\n\nNotes:\n{payload}"
@@ -455,7 +466,7 @@ async def process_notes_analysis(payload: str, mode: str = 'analyze'):
         }
 
 async def process_ai_analysis(payload: str, data_type: str, language: str = None):
-    judge = ClaudeSonnetAgent()
+    judge = NovaProAgent()
     if data_type == 'code_hub':
         lang_str = f" written in {language}" if language else ""
         prompt = f"Please provide an expert AI review, bug check, and optimization suggestions for the following code snippet{lang_str}. Be concise and helpful:\n\n{payload}"
@@ -474,7 +485,7 @@ async def process_ai_analysis(payload: str, data_type: str, language: str = None
 
 # --- LAMBDA ENTRY POINT ---
 
-# --- Security & Rate Limiting Middleware Component ---
+
 RATE_LIMIT_STORE = {}
 RATE_LIMIT_MAX = 60 # 60 requests
 RATE_LIMIT_WINDOW = 60 # per 60 seconds
@@ -495,11 +506,7 @@ def check_rate_limit(client_id):
 
 def lambda_handler(event, context):
     headers = {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, PUT, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token",
-        "Access-Control-Max-Age": "86400"
+        "Content-Type": "application/json"
     }
 
     # Extract client IP for rate limiting
@@ -530,50 +537,72 @@ def lambda_handler(event, context):
             if not query:
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "Query is required"})}
             
+            # Generating a user-specific cache key
+            raw_hash = hashlib.md5(query.strip().lower().encode('utf-8')).hexdigest()
+            cache_key = f"{username}_{raw_hash}"
+
             if action == "JUDGE_DEEP_DIVE":
                 llama_text = body.get("llama_content", "")
                 ministral_text = body.get("ministral_content", "")
+                print(f"DEBUG: Starting Deep Dive for query: {query[:50]}...")
                 final_result = asyncio.run(process_deep_dive(query, llama_text, ministral_text))
+                print(f"DEBUG: Deep Dive complete. Status: {final_result.get('status')}")
             else:
-                # --- CACHE CHECK ---
-                # Generating a user-specific cache key
-                raw_hash = hashlib.md5(query.strip().lower().encode('utf-8')).hexdigest()
-                cache_key = f"{username}_{raw_hash}"
-                
-                # Try Aurora First
+
+
                 cached_data = aurora.get(cache_key)
                 if cached_data:
-                    return {
-                        "statusCode": 200,
-                        "headers": headers,
-                        "body": json.dumps({"cached": True, "source": "aurora", "data": cached_data})
-                    }
+                    # Validate: never serve a cached error
+                    cached_str = json.dumps(cached_data).lower()
+                    if not any(err in cached_str for err in ['blocked by aws', 'accessdeniedexception', '"status": "error"', 'error_msg']):
+                        return {
+                            "statusCode": 200,
+                            "headers": headers,
+                            "body": json.dumps({"cached": True, "source": "aurora", "data": cached_data})
+                        }
+                    # Bad aurora entry — fall through to DynamoDB / live call
 
                 # Fallback to DynamoDB
                 try:
                     cached_item = cache_table.get_item(Key={'question_hash': cache_key})
                     if 'Item' in cached_item:
-                        return {
-                            "statusCode": 200,
-                            "headers": headers,
-                            "body": json.dumps({"cached": True, "source": "dynamodb", "data": json.loads(cached_item['Item']['response_data'])})
-                        }
+                        cached_raw = cached_item['Item']['response_data']
+                        cached_str = cached_raw.lower()
+                        # Validate: never serve a cached error
+                        if not any(err in cached_str for err in ['blocked by aws', 'accessdeniedexception', '"status": "error"', 'error_msg']):
+                            return {
+                                "statusCode": 200,
+                                "headers": headers,
+                                "body": json.dumps({"cached": True, "source": "dynamodb", "data": json.loads(cached_raw)})
+                            }
+                        else:
+                            # Delete the bad cached entry so it gets regenerated
+                            cache_table.delete_item(Key={'question_hash': cache_key})
+                            print(f"Deleted bad cache entry: {cache_key}")
                 except Exception:
                     pass
 
                 final_result = asyncio.run(process_consensus_query(query, body.get("attachments")))
 
-            # Write result to cache
-            aurora.put(cache_key, final_result, query)
-            try:
-                cache_table.put_item(Item={
-                    'question_hash': cache_key,
-                    'query_text':    query,
-                    'response_data': json.dumps(final_result),  
-                    'created_at':    datetime.utcnow().isoformat()
-                })
-            except Exception as e:
-                final_result["persistence_error_dynamo"] = str(e)
+            # Only cache successful, non-error results
+            result_str = json.dumps(final_result).lower()
+            is_error = any(err in result_str for err in [
+                'blocked by aws', 'accessdeniedexception', 'invalid_payment_instrument',
+                '"status": "error"', 'error_msg'
+            ])
+            if not is_error:
+                aurora.put(cache_key, final_result, query)
+                try:
+                    cache_table.put_item(Item={
+                        'question_hash': cache_key,
+                        'query_text':    query,
+                        'response_data': json.dumps(final_result),
+                        'created_at':    datetime.utcnow().isoformat()
+                    })
+                except Exception as e:
+                    final_result["persistence_error_dynamo"] = str(e)
+            else:
+                print(f"Skipping cache for error result: {result_str[:120]}")
             
             if aurora.last_error:
                 final_result["aurora_error"] = aurora.last_error

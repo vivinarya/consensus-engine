@@ -627,7 +627,14 @@
   to { transform: rotate(360deg); }
 }
 
+.mobileBottomNav {
+  display: none;
+}
+
 /* RESPONSIVE */
+.mobileOnly {
+  display: none !important;
+}
 @media (max-width: 768px) {
   .inputContainer {
     padding: 1rem;
@@ -698,6 +705,18 @@
 @media (max-width: 768px) {
   .appHeader {
     height: 70px;
+    padding: 1rem;
+    background: var(--engine-bg-color);
+  }
+  .inputContainer {
+    padding: 1rem;
+    padding-bottom: 5rem; /* Space for mobile nav */
+  }
+  .feedArea {
+    padding-top: 5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 7rem;
   }
   .inputGroup {
     flex-direction: column;
@@ -708,14 +727,76 @@
     font-size: 1rem;
   }
   .bottomProfileWrapper {
-    bottom: 1rem;
-    left: 1rem;
+    display: none;
   }
   .accountMenu {
-    bottom: calc(100% + 10px);
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) !important;
   }
-  .feedArea {
-    padding-left: 1rem;
-    padding-right: 1rem;
+  
+  .accountAvatarNav {
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, var(--engine-accent), #ed8936);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.7rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+  
+  .desktopOnly {
+    display: none !important;
+  }
+  
+  .mobileBottomNav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 70px;
+    background-color: var(--engine-panel-bg);
+    border-top: 1px solid var(--engine-border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 2100;
+    padding: 0 1rem;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+  }
+  
+  .mobileNavItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--engine-text-muted);
+    font-size: 0.7rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .mobileNavItemActive {
+    color: var(--engine-accent);
+  }
+
+  .navWrapper {
+     padding-left: 0;
+     justify-content: center;
+  }
+  .bubblyNav {
+     scale: 0.9;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobileOnly {
+    display: none !important;
   }
 }

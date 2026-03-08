@@ -18,8 +18,8 @@ class ConsensusBedrockStack(Stack):
             runtime=_lambda.Runtime.PYTHON_3_11,
             code=_lambda.Code.from_asset('lambda'),
             handler='lambda_function.lambda_handler',
-            timeout=Duration.seconds(30),
-            memory_size=512,
+            timeout=Duration.seconds(60),
+            memory_size=1024,
             environment={
                 "DB_HOST": os.getenv("DB_HOST"),
                 "DB_NAME": os.getenv("DB_NAME", "postgres"),

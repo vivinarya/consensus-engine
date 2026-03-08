@@ -98,6 +98,26 @@ const EnginePage = () => {
     }
   }, [username]);
 
+  // Helper: detect any kind of error/empty AI message that should NOT be persisted
+  const isErrorMessage = (msg) => {
+    if (msg.role !== 'ai') return false;
+    const txt = (msg.content || '').toLowerCase();
+    return (
+      txt.includes('blocked by aws') ||
+      txt.includes('accessdeniedexception') ||
+      txt.includes('invalid_payment_instrument') ||
+      txt.includes('error occurred') ||
+      txt.includes('unable to connect') ||
+      txt.includes('engine error') ||
+      txt.includes('unexpected response') ||
+      txt.includes('network error') ||
+      txt.includes('timed out') ||
+      txt.includes('service unavailable') ||
+      txt.startsWith('error:') ||
+      (txt.trim() === '') 
+    );
+  };
+
   useEffect(() => {
     if (username) {
       const fetchHistory = async () => {
@@ -109,9 +129,14 @@ const EnginePage = () => {
           });
           const result = await response.json();
           if (result.data && Array.isArray(result.data)) {
-            const filtered = result.data.filter(s => s.messages && s.messages.length > 0);
-            setSessions(filtered);
-            // Default to empty new chat instead of opening recent session
+            // Strip any persisted error messages from loaded history
+            const cleaned = result.data
+              .map(s => ({
+                ...s,
+                messages: (s.messages || []).filter(m => !isErrorMessage(m))
+              }))
+              .filter(s => s.messages && s.messages.length > 0);
+            setSessions(cleaned);
           }
         } catch (error) {
           console.error("Error fetching sessions:", error);
@@ -125,7 +150,14 @@ const EnginePage = () => {
     if (username && sessions.length > 0 && !isLoading) {
       const saveHistory = async () => {
         try {
-          const sessionsToSave = sessions.filter(s => s.messages && s.messages.length > 0);
+          // Sanitize before saving: strip all error AI messages
+          const sessionsToSave = sessions
+            .map(s => ({
+              ...s,
+              messages: (s.messages || []).filter(m => !isErrorMessage(m))
+            }))
+            .filter(s => s.messages && s.messages.length > 0);
+
           if (sessionsToSave.length === 0) return;
 
           await fetch(LAMBDA_URL, {
@@ -146,6 +178,7 @@ const EnginePage = () => {
       return () => clearTimeout(timeout);
     }
   }, [sessions, username, isLoading]);
+
 
   const currentMessages = sessions.find(s => s.id === currentSessionId)?.messages || [];
 
@@ -264,7 +297,15 @@ const EnginePage = () => {
       });
 
       const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || `Server Error (${response.status})`);
+      }
+      
       const data = result.data;
+      if (!data || !data.content) {
+        throw new Error("Expert Judge returned empty or invalid analysis.");
+      }
 
       const deepDiveMsg = {
         id: Date.now(),
@@ -277,6 +318,14 @@ const EnginePage = () => {
       updateCurrentMessages(prev => [...prev, deepDiveMsg]);
     } catch (error) {
       console.error("Deep dive error:", error);
+      const errorMsg = {
+        id: Date.now(),
+        role: 'ai',
+        status: 'DEEP_DIVE_RESULT',
+        content: `### ⚠️ Analysis Failed\n\n${error.message}\n\nPlease check your internet connection or try again in a few moments.`,
+        hasTyped: false
+      };
+      updateCurrentMessages(prev => [...prev, errorMsg]);
     } finally {
       updateCurrentMessages(prev => prev.map(m => m.id === messageId ? { ...m, deepDiveLoading: false } : m));
       setIsDeepDiveLoading(false);
@@ -360,7 +409,22 @@ const EnginePage = () => {
         aiMsg.selectedIdx = null;
         aiMsg.isLatestComparison = true;
       } else {
-        aiMsg.content = data.responses ? data.responses[0].content : "Received empty response from engine.";
+        // Handle legacy cache entries or any other response shape
+        if (data.responses && data.responses.length > 0) {
+          aiMsg.status = 'COMPARISON';
+          aiMsg.judge_explanation = data.judge_explanation || null;
+          aiMsg.responses = data.responses;
+          aiMsg.finalized = false;
+          aiMsg.selectedIdx = null;
+          aiMsg.isLatestComparison = true;
+        } else if (data.content) {
+          aiMsg.content = data.content;
+        } else if (data.error_msg) {
+          aiMsg.content = `Engine error: ${data.error_msg}`;
+        } else {
+          // Last resort: stringify whatever came back so it's visible
+          aiMsg.content = "The engine returned an unexpected response. Please try again.";
+        }
       }
 
       setSessions(prev => prev.map(s => {
@@ -659,8 +723,8 @@ const EnginePage = () => {
         )}
       </AnimatePresence>
 
-      {/* BOTTOM OUTSIDE PROFILE */}
-      <div className={styles.bottomProfileWrapper}>
+      {/* BOTTOM OUTSIDE PROFILE - Desktop Only */}
+      <div className={`${styles.bottomProfileWrapper} desktop-only`}>
         <AnimatePresence>
           {showAccountMenu && (
             <motion.div 
@@ -738,9 +802,9 @@ const EnginePage = () => {
                     </div>
                   )}
                   {isDeepDiveLoading && (
-                    <div className={styles.loadingRow}>
+                    <div className={styles.loadingRow} style={{ borderTop: '1px solid var(--engine-border)', margin: '1rem 0' }}>
                       <Loader2 className={styles.spinner} size={20} color="#8b5cf6" />
-                      <span style={{ color: '#8b5cf6' }}>Expert Judge is calculating deep dive...</span>
+                      <span style={{ color: '#8b5cf6' }}>Expert Judge is calculating deep dive analysis...</span>
                     </div>
                   )}
                 </div>
@@ -924,6 +988,110 @@ const EnginePage = () => {
           </filter>
         </defs>
       </svg>
+      {/* MOBILE BOTTOM NAV - Only visible on small screens */}
+      <div className={`${styles.mobileBottomNav} mobile-only`}>
+
+        {/* Mobile Account Menu - slides above nav bar */}
+        <AnimatePresence>
+          {showAccountMenu && (
+            <>
+              {/* tap-outside to dismiss */}
+              <div
+                onClick={() => setShowAccountMenu(false)}
+                style={{ position: 'fixed', inset: 0, zIndex: 2099 }}
+              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  position: 'fixed',
+                  bottom: '78px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '220px',
+                  backgroundColor: 'var(--engine-panel-bg)',
+                  border: '1px solid var(--engine-border)',
+                  borderRadius: '16px',
+                  padding: '1rem',
+                  boxShadow: '0 -8px 32px rgba(0,0,0,0.15)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  zIndex: 2100,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--engine-border)' }}>
+                  <div className={styles.accountAvatarSmall}>{username.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: 'var(--engine-text-main)', maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{username}</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#10b981' }}>Available</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'none', border: 'none', color: '#ef4444', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', padding: '0.4rem 0.2rem', borderRadius: '8px', width: '100%', textAlign: 'left' }}
+                >
+                  <LogOut size={16} /> Sign Out
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        <button 
+          className={`${styles.mobileNavItem} ${activeTab === 'chat' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('chat')}
+        >
+          <MessageSquare size={20} />
+          <span>Chat</span>
+        </button>
+        <button 
+          className={`${styles.mobileNavItem} ${activeTab === 'progress' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('progress')}
+        >
+          <TrendingUp size={20} />
+          <span>Insights</span>
+        </button>
+        <button 
+          className={`${styles.mobileNavItem} ${activeTab === 'notes' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('notes')}
+        >
+          <StickyNote size={20} />
+          <span>Notes</span>
+        </button>
+        <button 
+          className={styles.mobileNavItem}
+          onClick={() => setActivePopup('Chat History')}
+        >
+          <History size={20} />
+          <span>History</span>
+        </button>
+        <button 
+          className={styles.mobileNavItem}
+          onClick={() => setShowAccountMenu(!showAccountMenu)}
+        >
+          <div className={styles.accountAvatarNav}>
+            {username.charAt(0).toUpperCase()}
+          </div>
+          <span>Account</span>
+        </button>
+      </div>
+
+
+      <style>{`
+        @media (min-width: 769px) {
+          .mobile-only {
+            display: none !important;
+          }
+        }
+        @media (max-width: 768px) {
+          .desktop-only {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

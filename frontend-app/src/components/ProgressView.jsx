@@ -130,10 +130,13 @@ const ProgressView = ({ username }) => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      className="progress-container"
       style={{
         flex: 1,
-        padding: '6rem 2.5rem 2rem 2.5rem',
+        padding: '2rem',
+        paddingTop: '6rem',
         display: 'flex',
+        flexWrap: 'wrap',
         gap: '2rem',
         height: '100%',
         boxSizing: 'border-box',
@@ -141,8 +144,38 @@ const ProgressView = ({ username }) => {
         overflowX: 'hidden'
       }}
     >
+      <style>{`
+        .progress-container {
+          flex-direction: row;
+        }
+        .progress-sidebar {
+           width: 320px;
+        }
+        .progress-stats-grid {
+           grid-template-columns: repeat(3, 1fr);
+        }
+        @media (max-width: 1100px) {
+          .progress-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media (max-width: 768px) {
+          .progress-container {
+            padding: 1rem !important;
+            padding-top: 5rem !important;
+            flex-direction: column !important;
+          }
+          .progress-sidebar {
+            width: 100% !important;
+          }
+          .progress-stats-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+      
       {/* LEFT SIDEBAR - Select a Course */}
-      <div style={{ width: '320px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="progress-sidebar" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', margin: 0, color: 'var(--engine-text-main)', fontWeight: 600 }}>Select a course</h2>
@@ -223,8 +256,8 @@ const ProgressView = ({ username }) => {
             </div>
           </div>
           
-          <div style={{ flex: 1, width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="chart-container" style={{ width: '100%', minHeight: '350px', position: 'relative', marginTop: '1rem', backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: '16px', padding: '10px', border: '1px solid var(--engine-border)' }}>
+            <ResponsiveContainer width="100%" height={320} debounce={200}>
               <LineChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--engine-text-muted)', fontSize: 12 }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--engine-text-muted)', fontSize: 12 }} dx={-10} tickFormatter={(val) => `${val}%`} />
@@ -235,10 +268,11 @@ const ProgressView = ({ username }) => {
               </LineChart>
             </ResponsiveContainer>
           </div>
+
         </div>
 
         {/* ROW 2: HOMEWORK, FRIENDS SCORE, AI COACH */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', flex: '0 0 auto' }}>
+        <div className="progress-stats-grid" style={{ display: 'grid', gap: '1.5rem', flex: '0 0 auto' }}>
           
           {/* Homework Card */}
           <div style={{ backgroundColor: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', borderRadius: '24px', padding: '1.5rem' }}>
