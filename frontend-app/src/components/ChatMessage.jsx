@@ -3,6 +3,16 @@ import ReactMarkdown from 'react-markdown';
 import { CheckCircle, Cpu, ShieldCheck, Paperclip, HelpCircle, Sparkles, Loader2, ArrowRight, Zap } from 'lucide-react';
 import styles from './ChatMessage.module.css';
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  return isMobile;
+};
+
 const TypewriterAI = ({ content, speed = 10, onComplete, onChar, stopSignal }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   const startTimeRef = React.useRef(null);
@@ -44,6 +54,7 @@ const TypewriterAI = ({ content, speed = 10, onComplete, onChar, stopSignal }) =
 };
 
 const ChatMessage = ({ message, onSelect, onDeepDive, onScroll, stopSignal, onTypingStatusChange }) => {
+  const isMobile = useIsMobile();
   const [isTyping, setIsTyping] = useState(!message.hasTyped && message.role === 'ai');
   const isUser = message.role === 'user';
   
@@ -223,32 +234,65 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll, stopSignal, onTy
 
   // Default Standard AI Message
   return (
-    <div className={`${styles.messageRow} ${styles.aiRow}`}>
-      <div className={styles.aiContent}>
-        <div className={styles.aiAvatar}>
-          <Cpu size={20} color="#fff" />
-        </div>
-        <div className={styles.aiText}>
-          {message.isFromCache && (
-            <div className={styles.cacheBadge}>
-              <Zap size={12} fill="currentColor" />
-              <span>Cached Response</span>
-            </div>
-          )}
-          {isTyping ? (
-            <TypewriterAI 
-                content={message.content} 
-                speed={5} 
-                stopSignal={stopSignal}
-                onComplete={handleTypingComplete} 
-                onChar={handleCharTyped}
-            />
-          ) : (
-            <ReactMarkdown>{message.content}</ReactMarkdown>
-          )}
+    <>
+      <div className={`${styles.messageRow} ${styles.aiRow}`}>
+        <div className={styles.aiContent}>
+          <div className={styles.aiAvatar}>
+            <Cpu size={20} color="#fff" />
+          </div>
+          <div className={styles.aiText}>
+            {message.isFromCache && (
+              <div className={styles.cacheBadge}>
+                <Zap size={12} fill="currentColor" />
+                <span>Cached Response</span>
+              </div>
+            )}
+            {isTyping ? (
+              <TypewriterAI 
+                  content={message.content} 
+                  speed={5} 
+                  stopSignal={stopSignal}
+                  onComplete={handleTypingComplete} 
+                  onChar={handleCharTyped}
+              />
+            ) : (
+              <ReactMarkdown>{message.content}</ReactMarkdown>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .${styles.aiAvatar} {
+            width: 32px !important;
+            height: 32px !important;
+          }
+          .${styles.aiContent} {
+            gap: 0.75rem !important;
+            max-width: 100% !important;
+          }
+          .${styles.userContent} {
+            max-width: 85% !important;
+          }
+          .${styles.optionCard} {
+            padding: 1.25rem !important;
+            min-height: unset !important;
+          }
+          .${styles.dualOptions} {
+            gap: 1rem !important;
+          }
+          .${styles.comparisonContainer} {
+            padding-left: 0.5rem !important;
+          }
+          /* Disable heavy effects on mobile */
+          .${styles.aiAvatar}, .${styles.userContent}, .${styles.optionCard}, .${styles.judgeBlock}, .${styles.deepDiveButton} {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+          }
+        }
+      `}</style>
+    </>
   );
 };
 

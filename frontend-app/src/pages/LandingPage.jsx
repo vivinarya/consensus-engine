@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowUpRight, Cpu, Zap, Box, CircleDashed } from 'lucide-react';
 import styles from './LandingPage.module.css';
 import Logo from '../components/Logo';
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  useEffect(() => {
+    const checkIsMobile = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+  return isMobile;
+};
+
 const LandingPage = () => {
   const [showInput, setShowInput] = useState(false);
   const [username, setUsername] = useState('');
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLaunchClick = (e) => {
     e.preventDefault();
@@ -23,7 +34,6 @@ const LandingPage = () => {
     }
   };
 
-  // Animation variants
   const fadeIn = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
@@ -31,10 +41,7 @@ const LandingPage = () => {
 
   const staggerContainer = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2, delayChildren: 0.3 }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.2, delayChildren: 0.3 } }
   };
 
   const cardVariant = {
@@ -52,8 +59,8 @@ const LandingPage = () => {
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.div className={styles.logo} variants={fadeIn}>
-          <Logo style={{ height: '36px', color: 'var(--landing-text-main)' }} />
+        <motion.div className={styles.logo} variants={fadeIn} style={{ display: 'flex', alignItems: 'center' }}>
+          <Logo style={{ height: isMobile ? '32px' : '36px', color: 'var(--landing-text-main)' }} />
         </motion.div>
 
         <div className={styles.contentWrapper}>
@@ -80,7 +87,7 @@ const LandingPage = () => {
                   <button onClick={handleLaunchClick} className={styles.ctaButton} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex' }}>
                     <span>LAUNCH ENGINE</span>
                     <div className={styles.ctaIcon}>
-                      <ArrowUpRight size={20} color="#fff" />
+                      <ArrowUpRight size={isMobile ? 18 : 20} color="#fff" />
                     </div>
                   </button>
                 </motion.div>
@@ -93,7 +100,7 @@ const LandingPage = () => {
                   transition={{ duration: 0.2 }}
                   onSubmit={handleSubmit}
                   className={styles.ctaButton}
-                  style={{ padding: '0.4rem 0.4rem 0.4rem 1.5rem', cursor: 'default' }}
+                  style={{ padding: isMobile ? '0.4rem 0.4rem 0.4rem 1.25rem' : '0.4rem 0.4rem 0.4rem 1.5rem', cursor: 'default' }}
                 >
                   <input
                     type="text"
@@ -102,13 +109,13 @@ const LandingPage = () => {
                     onChange={(e) => setUsername(e.target.value)}
                     style={{
                       background: 'transparent', border: 'none', color: '#fff',
-                      fontSize: '1.2rem', fontWeight: '600', outline: 'none', width: '200px',
+                      fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: '600', outline: 'none', width: isMobile ? '150px' : '200px',
                       fontFamily: 'inherit'
                     }}
                     autoFocus
                   />
                   <button type="submit" className={styles.ctaIcon} style={{ background: 'var(--landing-accent)', border: 'none', cursor: 'pointer' }}>
-                    <ArrowUpRight size={20} color="#fff" />
+                    <ArrowUpRight size={isMobile ? 18 : 20} color="#fff" />
                   </button>
                 </motion.form>
               )}
@@ -152,7 +159,7 @@ const LandingPage = () => {
               <div className={styles.cardTop}>
                 <span className={styles.cardTitle}>Evaluated continuously</span>
                 <div className={styles.cardIcon}>
-                  <ArrowUpRight size={18} color="#fff" />
+                  <ArrowUpRight size={isMobile ? 16 : 18} color="#fff" />
                 </div>
               </div>
               <div>
@@ -166,14 +173,14 @@ const LandingPage = () => {
               <div className={styles.cardTop}>
                 <span className={styles.cardTitle}>Live Judge Resolution</span>
                 <div className={styles.cardIcon}>
-                  <Zap size={18} fill="#fff" color="#fff" />
+                  <Zap size={isMobile ? 16 : 18} fill="#fff" color="#fff" />
                 </div>
               </div>
               <div>
                 <div className={styles.cardMain}>Nova Pro</div>
                 <div className={styles.cardSub}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <CircleDashed size={24} color="#fff" />
+                    <CircleDashed size={isMobile ? 20 : 24} color="#fff" />
                     <span>99% accuracy</span>
                   </div>
                 </div>

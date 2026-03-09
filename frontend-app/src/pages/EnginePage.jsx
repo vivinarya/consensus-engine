@@ -72,6 +72,7 @@ const EnginePage = () => {
   const currentTab = hoveredTab || activeTab;
   const [activePopup, setActivePopup] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const feedRef = useRef(null);
   const fileInputRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -101,6 +102,22 @@ const EnginePage = () => {
       setGreetings([`Welcome, ${username}`, "Let's get started"]);
     }
   }, [username]);
+
+  // Handle Resize for Mobile Detection
+  useEffect(() => {
+    let timeoutId = null;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth <= 768);
+      }, 150);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // Helper: detect any kind of error/empty AI message that should NOT be persisted
   const isErrorMessage = (msg) => {
@@ -468,20 +485,22 @@ const EnginePage = () => {
   };
 
   const handleMouseMove = (e) => {
+    if (isMobile) return; // Disable expensive move tracking on mobile devices
+    if (!e.currentTarget) return;
     const { clientX, clientY, currentTarget } = e;
     const { width, height } = currentTarget.getBoundingClientRect();
+    if (!width || !height) return;
     const x = (clientX / width) * 100;
     const y = (clientY / height) * 100;
     setMousePos({ x, y });
   };
 
   const handleTouchMove = (e) => {
-    if (!e.touches || !e.touches[0]) return;
+    if (!e.touches[0]) return;
     const touch = e.touches[0];
-    const { clientX, clientY } = touch;
     const { width, height } = e.currentTarget.getBoundingClientRect();
-    const x = (clientX / width) * 100;
-    const y = (clientY / height) * 100;
+    const x = (touch.clientX / width) * 100;
+    const y = (touch.clientY / height) * 100;
     setMousePos({ x, y });
   };
 
@@ -579,9 +598,9 @@ const EnginePage = () => {
 
   return (
     <div
-      className={styles.engineContainer}
+      className={`${styles.engineContainer} ${isMobile ? 'is-mobile' : ''}`}
       onMouseMove={handleMouseMove}
-      onTouchMove={handleTouchMove}
+      onTouchMove={isMobile ? undefined : handleTouchMove}
       style={{
         '--mouse-x': `${mousePos.x}%`,
         '--mouse-y': `${mousePos.y}%`
@@ -1051,6 +1070,11 @@ const EnginePage = () => {
           <filter id="goo">
             <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur" />
             <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -10" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+          </filter>
+          <filter id="goo-mobile">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>

@@ -34,6 +34,13 @@ const CareerView = ({ username }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [enrolledTopics, setEnrolledTopics] = useState([]);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   useEffect(() => {
     // Load saved career paths from backend
@@ -189,7 +196,7 @@ const CareerView = ({ username }) => {
             width: 100% !important;
             border-right: none !important;
             border-bottom: 1px solid var(--engine-border) !important;
-            max-height: 200px !important;
+            max-height: 250px !important;
             padding: 1rem !important;
           }
           .career-sidebar h3 {
@@ -312,7 +319,7 @@ const CareerView = ({ username }) => {
         {/* Main Content Area */}
         <div style={{
           flex: '1 1 500px',
-          padding: '2.5rem',
+          padding: isMobile ? '1.5rem' : '2.5rem',
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto'
@@ -328,7 +335,7 @@ const CareerView = ({ username }) => {
                 style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                  <h2 style={{ margin: 0, color: 'var(--engine-text-main)', fontSize: '1.8rem', fontWeight: 'bold' }}>
+                  <h2 style={{ margin: 0, color: 'var(--engine-text-main)', fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 'bold' }}>
                     {activePath.title}
                   </h2>
                   <button 

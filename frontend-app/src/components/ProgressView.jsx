@@ -12,6 +12,13 @@ const ProgressView = ({ username }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState('in-progress');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchProgress();
@@ -139,79 +146,77 @@ const ProgressView = ({ username }) => {
       }}
     >
       <div className="progress-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'clamp(1.4rem,4vw,2rem)', whiteSpace: 'nowrap' }}>
-          <TrendingUp size={24} color="var(--engine-accent)" /> Learning Progress
+        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'clamp(1.2rem,4vw,2rem)', whiteSpace: 'nowrap' }}>
+          <TrendingUp size={isMobile ? 20 : 24} color="var(--engine-accent)" /> Learning Progress
         </h1>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '1rem' : '2rem' }}>
 
         {/* Top Banner */}
         <div className="progress-banner" style={{
           display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: '2rem',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '1.5rem' : '2.0rem',
           backgroundColor: 'var(--engine-panel-bg)',
           border: '1px solid var(--engine-border)',
           borderRadius: 'var(--radius-lg)',
-          padding: '2rem 3rem',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+          padding: isMobile ? '1.5rem' : '2rem 3rem',
+          boxShadow: isMobile ? 'none' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          alignItems: isMobile ? 'center' : 'stretch'
         }}>
 
           {/* Consistency */}
-          <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h3 style={{ margin: '0 0 2rem 0', color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>Account Standing</h3>
+          <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--engine-text-main)', fontSize: '1rem', fontWeight: 600 }}>Account Standing</h3>
 
-            <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center', width: '100%' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: isMobile ? '1.5rem' : '3rem', justifyContent: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{topics.length}</span>
-                  <Target size={32} color="var(--engine-accent)" />
+                  <span style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{topics.length}</span>
+                  <Target size={isMobile ? 24 : 32} color="var(--engine-accent)" />
                 </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>TOTAL TOPICS</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>TOTAL</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{completedCount}</span>
-                  <Award size={32} color="#eab308" />
+                  <span style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{completedCount}</span>
+                  <Award size={isMobile ? 24 : 32} color="#eab308" />
                 </div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>COMPLETED</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>DONE</span>
               </div>
             </div>
           </div>
 
-          <div style={{ width: '1px', backgroundColor: 'var(--engine-border)' }} />
+          {!isMobile && <div style={{ width: '1px', backgroundColor: 'var(--engine-border)' }} />}
 
           {/* Progress Distribution */}
-          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <h3 style={{ margin: '0 0 2rem 0', color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>Mastery Progress</h3>
+          <div style={{ flex: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+            <h3 style={{ margin: '0 0 1rem 0', color: 'var(--engine-text-main)', fontSize: '1rem', fontWeight: 600 }}>Mastery</h3>
 
             <div style={{
               position: 'relative',
-              width: '120px',
-              height: '120px',
+              width: isMobile ? '90px' : '120px',
+              height: isMobile ? '90px' : '120px',
               borderRadius: '50%',
               backgroundImage: `conic-gradient(var(--engine-accent) ${progressRatio}%, transparent 0)`,
               backgroundColor: 'var(--engine-panel-bg)',
               border: '1px solid var(--engine-border)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'inset 0 0 0 8px var(--engine-panel-bg), 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              justifyContent: 'center'
             }}>
               <div style={{
-                width: '104px',
-                height: '104px',
+                width: isMobile ? '78px' : '104px',
+                height: isMobile ? '78px' : '104px',
                 borderRadius: '50%',
                 backgroundColor: 'var(--engine-panel-bg)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 10px rgba(0,0,0,0.05)'
+                justifyContent: 'center'
               }}>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{progressRatio}%</span>
+                <span style={{ fontSize: isMobile ? '1.1rem' : '1.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{progressRatio}%</span>
               </div>
             </div>
           </div>
@@ -219,7 +224,7 @@ const ProgressView = ({ username }) => {
         </div>
 
         {/* Bottom Grid */}
-        <div className="progress-bottom-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        <div className="progress-bottom-grid" style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
 
           {/* Recent Activity */}
           <div style={{

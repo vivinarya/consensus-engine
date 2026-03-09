@@ -1,12 +1,23 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Network, Database, CircleDashed } from 'lucide-react';
 import styles from './LandingPage.module.css'; // Reusing Landing Page CSS
 import Logo from '../components/Logo';
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+  React.useEffect(() => {
+    const checkIsMobile = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
+  return isMobile;
+};
+
 const ArchitecturePage = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const fadeIn = {
     hidden: { opacity: 0, y: 30 },
@@ -35,8 +46,8 @@ const ArchitecturePage = () => {
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.div className={styles.logo} variants={fadeIn} onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-          <Logo style={{ height: '36px', color: 'var(--landing-text-main)' }} />
+        <motion.div className={styles.logo} variants={fadeIn} onClick={() => navigate('/')} style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+          <Logo style={{ height: isMobile ? '32px' : '36px', color: 'var(--landing-text-main)' }} />
         </motion.div>
 
         <div className={styles.contentWrapper}>
@@ -92,7 +103,7 @@ const ArchitecturePage = () => {
               <div className={styles.cardTop}>
                 <span className={styles.cardTitle}>Backend Services</span>
                 <div className={styles.cardIcon}>
-                  <Network size={18} color="#fff" />
+                  <Network size={isMobile ? 16 : 18} color="#fff" />
                 </div>
               </div>
               <div>
@@ -106,14 +117,14 @@ const ArchitecturePage = () => {
               <div className={styles.cardTop}>
                 <span className={styles.cardTitle}>Database Layer</span>
                 <div className={styles.cardIcon}>
-                  <Database size={18} color="#fff" />
+                  <Database size={isMobile ? 16 : 18} color="#fff" />
                 </div>
               </div>
               <div>
                 <div className={styles.cardMain}>Aurora & Dynamo</div>
                 <div className={styles.cardSub}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                    <CircleDashed size={24} color="#fff" />
+                    <CircleDashed size={isMobile ? 20 : 24} color="#fff" />
                     <span>Hybrid persistent storage</span>
                   </div>
                 </div>

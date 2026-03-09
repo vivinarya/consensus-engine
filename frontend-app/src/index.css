@@ -148,3 +148,24 @@ code {
 [data-theme='dark'] code {
   background-color: rgba(255, 255, 255, 0.1);
 }
+
+/* Mobile Lag-Free Performance Overrides */
+@media (max-width: 768px) {
+  /* Disable heavy glassmorphism filters to prevent scrolling lag */
+  .glass, .glass-light {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .glass {
+    background: var(--engine-panel-bg) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+  }
+  .glass-light {
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05) !important;
+  }
+  [data-theme='dark'] .glass-light {
+    background: var(--engine-panel-bg) !important;
+  }
+}
+

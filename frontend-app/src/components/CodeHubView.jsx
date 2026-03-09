@@ -33,6 +33,13 @@ const CodeHubView = ({ username }) => {
 
   const [isExecuting, setIsExecuting] = useState(false);
   const [outputResult, setOutputResult] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchCode();
@@ -173,10 +180,10 @@ const CodeHubView = ({ username }) => {
       animate={{ opacity: 1, scale: 1 }}
       style={{
         flex: 1,
-        padding: 'clamp(4rem,8vw,5rem) clamp(1rem,4vw,3rem) 2rem clamp(1rem,4vw,3rem)',
+        padding: isMobile ? '4rem 1rem 1rem 1rem' : 'clamp(4rem,8vw,5rem) clamp(1rem,4vw,3rem) 2rem clamp(1rem,4vw,3rem)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.5rem',
+        gap: isMobile ? '1rem' : '1.5rem',
         width: '100%',
         maxWidth: '1200px',
         margin: '0 auto',
@@ -246,7 +253,7 @@ const CodeHubView = ({ username }) => {
             }}
           >
             {isExecuting ? <Loader2 size={15} className="spin" /> : <Play size={15} fill="currentColor" />} 
-            <span>{isExecuting ? 'Running...' : 'Run'}</span>
+            {!isMobile && <span>{isExecuting ? 'Running...' : 'Run'}</span>}
           </button>
 
           <button 
@@ -269,7 +276,7 @@ const CodeHubView = ({ username }) => {
             }}
           >
             {isAnalyzing ? <Loader2 size={15} className="spin" /> : <Sparkles size={15} />} 
-            <span>{isAnalyzing ? 'Analyzing...' : 'AI Check'}</span>
+            {!isMobile && <span>{isAnalyzing ? 'Analyzing...' : 'AI Check'}</span>}
           </button>
         </div>
       </div>
@@ -285,17 +292,17 @@ const CodeHubView = ({ username }) => {
           position: 'relative'
       }}>
         {/* Fake Terminal Top Bar */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '36px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', display: 'flex', alignItems: 'center', padding: '0 1rem', zIndex: 10 }}>
-          <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '36px', backgroundColor: '#161b22', borderBottom: '1px solid #30363d', display: 'flex', alignItems: 'center', padding: isMobile ? '0 0.5rem' : '0 1rem', zIndex: 10 }}>
+          <div style={{ display: isMobile ? 'none' : 'flex', gap: '6px' }}>
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ff5f56' }} />
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ffbd2e' }} />
             <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#27c93f' }} />
           </div>
           <div style={{ color: '#8b949e', fontSize: '0.8rem', flex: 1, textAlign: 'center', fontFamily: 'monospace' }}>
-            {username} ~ code_hub ~ {language.toLowerCase()}
+            {username} ~ code_cli
           </div>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '48px 1rem 1rem 1rem' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: isMobile ? '36px 0.5rem 0.5rem 0.5rem' : '48px 1rem 1rem 1rem' }}>
           <Editor
             value={code}
             onValueChange={handleCodeChange}
@@ -306,10 +313,10 @@ const CodeHubView = ({ username }) => {
               if (language === 'Java') syntax = 'java';
               return Prism.highlight(code, Prism.languages[syntax] || Prism.languages.clike, syntax);
             }}
-            padding={16}
+            padding={isMobile ? 8 : 16}
             style={{
               fontFamily: "'Fira Code', 'Consolas', monospace",
-              fontSize: '1.05rem',
+              fontSize: isMobile ? '0.9rem' : '1.05rem',
               lineHeight: '1.6',
               minHeight: '100%',
               color: '#c9d1d9',
@@ -349,14 +356,20 @@ const CodeHubView = ({ username }) => {
         <AnimatePresence>
           {analysisResult && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: '500px', opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
+              initial={isMobile ? { y: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
+              animate={isMobile ? { y: 0, opacity: 1 } : { width: '500px', opacity: 1 }}
+              exit={isMobile ? { y: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
               style={{
-                borderLeft: '1px solid #30363d',
+                borderLeft: isMobile ? 'none' : '1px solid #30363d',
+                borderTop: isMobile ? '1px solid #30363d' : 'none',
                 backgroundColor: '#161b22',
                 display: 'flex',
                 flexDirection: 'column',
+                position: isMobile ? 'absolute' : 'relative',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: isMobile ? '70%' : '100%',
                 zIndex: 11
               }}
             >

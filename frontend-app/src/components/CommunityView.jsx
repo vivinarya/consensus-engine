@@ -9,6 +9,13 @@ const CommunityView = ({ username }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isPosting, setIsPosting] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchPosts();
@@ -123,8 +130,8 @@ const CommunityView = ({ username }) => {
           display: 'flex',
           flexDirection: 'column',
           overflowY: 'auto',
-          padding: '2rem',
-          gap: '2rem'
+          padding: isMobile ? '1rem' : '2rem',
+          gap: isMobile ? '1rem' : '2rem'
       }}>
         
         {/* Input Box Card */}
@@ -132,10 +139,10 @@ const CommunityView = ({ username }) => {
           backgroundColor: 'color-mix(in srgb, var(--engine-text-muted) 10%, transparent)',
           borderRadius: '16px',
           border: '1px solid var(--engine-border)',
-          padding: '2rem',
+          padding: isMobile ? '1.25rem' : '2rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1.5rem'
+          gap: isMobile ? '1rem' : '1.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{
@@ -219,10 +226,10 @@ const CommunityView = ({ username }) => {
                 backgroundColor: 'color-mix(in srgb, var(--engine-text-muted) 10%, transparent)',
                 borderRadius: '16px',
                 border: '1px solid var(--engine-border)',
-                padding: '2rem',
+                padding: isMobile ? '1.25rem' : '2rem',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem',
+                gap: isMobile ? '1rem' : '1.5rem',
                 position: 'relative'
               }}
             >

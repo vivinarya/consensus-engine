@@ -3,6 +3,7 @@
   min-height: 100vh;
   width: 100vw;
   background-color: #ffffff;
+  background-image: radial-gradient(at top left, #ffffff 0%, #f9fafb 100%);
 }
 
 /* LEFT PANEL (Content) */
@@ -58,7 +59,7 @@
   width: 104%;
   height: 24px;
   background: var(--landing-accent);
-  opacity: 0.5; /* Darkened from 0.2 */
+  opacity: 0.5;
   border-radius: 8px;
   z-index: -1;
   transform: rotate(-1deg);
@@ -127,7 +128,6 @@
   width: 100%;
   height: 100%;
   border-radius: var(--radius-xl);
-  /* A stunning modern mesh gradient acting as the 3D aesthetic background */
   background-color: #e0c3fc;
   background-image: 
     radial-gradient(at 40% 20%, hsla(28,100%,74%,1) 0px, transparent 50%),
@@ -146,6 +146,13 @@
   align-items: center;
   justify-content: flex-end;
   padding: 4rem 4rem 1.5rem 4rem;
+}
+
+.bubblyNav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: url('#goo');
 }
 
 @keyframes floatColors {
@@ -246,180 +253,180 @@
 
 /* ─── Mobile ─── */
 @media (max-width: 768px) {
-  /* Stack panels vertically */
   .container {
     flex-direction: column;
     overflow-x: hidden;
+    background-color: #fff;
   }
 
-  /* Left panel: readable padding, natural height */
   .leftPanel {
-    padding: 1.75rem 1.5rem 2rem 1.5rem;
+    padding: 2.5rem 1.5rem 3rem 1.5rem;
     min-height: unset;
     justify-content: flex-start;
-    gap: 1.5rem;
+    gap: 2rem;
+    background: transparent;
   }
 
-  /* Logo sits at top */
   .logo {
-    font-size: 1.4rem;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
   }
 
-  /* Content wrapper doesn't need negative margin on mobile */
   .contentWrapper {
     margin-top: 0;
     max-width: 100%;
   }
 
-  /* Scale headline for comfortable reading */
   .headline {
-    font-size: clamp(2.4rem, 9vw, 3.2rem);
-    margin-bottom: 1rem;
+    font-size: clamp(2.8rem, 10vw, 3.8rem);
+    margin-bottom: 1.5rem;
+    line-height: 1.1;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .highlight::after {
-    height: 18px;
-    bottom: 5px;
+    height: 20px;
+    bottom: 6px;
   }
 
   .description {
-    font-size: 1.05rem;
-    margin-bottom: 2rem;
+    font-size: 1.15rem;
+    margin-bottom: 3rem;
     max-width: 100%;
+    line-height: 1.5;
   }
 
-  /* CTA button full-width on mobile */
   .ctaButton {
     width: 100%;
     justify-content: space-between;
-    padding: 0.9rem 1.25rem;
-    font-size: 1rem;
+    padding: 1.1rem 1.5rem;
+    font-size: 1.1rem;
     box-sizing: border-box;
+    border-radius: 18px;
   }
 
-  /* Right panel: gradient visual area below */
   .rightPanel {
-    width: 100vw;
-    min-height: 55vw;
-    max-height: 70vw;
-    padding: 0.75rem;
+    width: 100%;
+    padding: 1.25rem;
     flex-shrink: 0;
+    box-sizing: border-box;
+    background: transparent;
   }
 
   .visualContainer {
-    border-radius: 20px;
-    padding: 2.5rem 1rem 1rem 1rem;
-    min-height: unset;
+    border-radius: 32px;
+    padding: 7rem 1.25rem 2.5rem 1.25rem;
+    min-height: 550px;
     height: 100%;
+    background-size: 300% 300%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   }
 
-  /* Pills: allow horizontal scroll, prevent overflow */
   .topPills {
-    top: 1rem;
-    right: 1rem;
+    top: 1.5rem;
     left: 1rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
+    right: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 0.5rem;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    flex-wrap: wrap; 
+    z-index: 20;
   }
-  .topPills::-webkit-scrollbar { display: none; }
 
   .pill {
-    padding: 0.4rem 0.9rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
     white-space: nowrap;
     flex-shrink: 0;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    background: rgba(255, 255, 255, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   }
 
-  /* Cards: stack vertically, full width */
+  .pillDark {
+    background: #111827 !important;
+    color: #fff !important;
+  }
+
   .cardsContainer {
-    flex-direction: row;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 1.25rem;
     max-width: 100%;
+    margin-top: 1rem;
   }
 
   .glassCard {
-    min-height: 140px;
-    padding: 1rem 1rem 0.75rem 1rem;
+    min-height: 180px;
+    padding: 1.5rem;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    flex: none;
+    width: 100%;
   }
 
   .cardTop {
-    margin-bottom: 0.75rem;
+    margin-bottom: 2rem;
   }
 
   .cardTitle {
-    font-size: 0.85rem;
-    max-width: 90px;
+    font-size: 1rem;
+    max-width: unset;
   }
 
   .cardMain {
-    font-size: 1.75rem;
+    font-size: 2.2rem;
   }
 
   .cardSub {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
   }
 }
 
 /* ─── Very small phones (≤ 480px) ─── */
 @media (max-width: 480px) {
   .leftPanel {
-    padding: 1.25rem 1.25rem 1.5rem 1.25rem;
+    padding: 2rem 1.25rem 2.5rem 1.25rem;
   }
 
   .headline {
-    font-size: clamp(2rem, 10vw, 2.8rem);
+    font-size: clamp(2.4rem, 11vw, 3rem);
   }
 
-  /* Give the gradient panel more room so cards fit well */
+  .description {
+    font-size: 1.05rem;
+    margin-bottom: 2.5rem;
+  }
+
   .rightPanel {
-    min-height: 52vw;
-    max-height: unset;
-    height: auto;
-    padding: 0.5rem;
+    min-height: 600px;
   }
 
   .visualContainer {
-    padding: 2.75rem 0.75rem 0.75rem 0.75rem;
+    padding-top: 8rem;
   }
 
-  /* Keep cards SIDE BY SIDE on all phones, just compress them */
   .cardsContainer {
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: stretch;
-  }
-
-  /* Each card is compact, no tall min-height */
-  .glassCard {
-    flex: 1;
-    min-height: unset;
     flex-direction: column;
-    padding: 0.75rem 0.75rem 0.6rem 0.75rem;
+    gap: 1rem;
   }
 
-  .cardTop {
-    margin-bottom: 0.5rem;
-  }
-
-  .cardTitle {
-    font-size: 0.75rem;
-    max-width: 80px;
-    line-height: 1.2;
-  }
-
-  .cardIcon {
-    padding: 5px;
+  .glassCard {
+    min-height: 160px;
+    width: 100%;
   }
 
   .cardMain {
-    font-size: 1.4rem;
-  }
-
-  .cardSub {
-    font-size: 0.72rem;
+    font-size: 2rem;
   }
 }
-

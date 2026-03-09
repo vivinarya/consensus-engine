@@ -25,6 +25,19 @@
   transition: opacity 0.3s;
 }
 
+@media (max-width: 768px) {
+  .ambientBackground {
+    background-size: 200% 200%;
+    animation: mobileAmbient 15s ease infinite alternate;
+  }
+}
+
+@keyframes mobileAmbient {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 100%; }
+}
+
 /* USERNAME MODAL */
 .modalOverlay {
   position: absolute;
@@ -168,6 +181,12 @@
   filter: url('#goo');
 }
 
+@media (max-width: 768px) {
+  .bubblyNav {
+    filter: url('#goo-mobile') !important;
+  }
+}
+
 .navStack {
   display: flex;
   flex-direction: column;
@@ -227,6 +246,12 @@
   padding: 8px 0;
   margin: -8px 0;
   filter: url('#goo');
+}
+
+@media (max-width: 768px) {
+  .navPillContainer {
+    filter: url('#goo-mobile') !important;
+  }
 }
 
 .bottomProfileWrapper {

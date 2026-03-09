@@ -148,6 +148,13 @@ const NotesView = ({ username }) => {
   const [responses, setResponses] = useState([]);
   const [activeWorkerIdx, setActiveWorkerIdx] = useState(0);
   const [isDeepDiveLoading, setIsDeepDiveLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     fetchNotes();
@@ -356,13 +363,13 @@ const NotesView = ({ username }) => {
             flex: 1,
             width: '100%',
             height: '100%',
-            padding: '2rem',
+            padding: isMobile ? '1.25rem' : '2rem',
             backgroundColor: 'transparent',
             color: 'var(--engine-text-main)',
             border: 'none',
             outline: 'none',
             fontFamily: 'var(--font-body)',
-            fontSize: '1.05rem',
+            fontSize: isMobile ? '0.95rem' : '1.05rem',
             lineHeight: '1.6',
             resize: 'none'
           }}
@@ -370,14 +377,22 @@ const NotesView = ({ username }) => {
         <AnimatePresence>
           {analysisResult && (
             <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: '400px', opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
+              initial={isMobile ? { y: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
+              animate={isMobile ? { y: 0, opacity: 1 } : { width: '400px', opacity: 1 }}
+              exit={isMobile ? { y: '100%', opacity: 0 } : { width: 0, opacity: 0 }}
               style={{
-                borderLeft: '1px solid var(--engine-border)',
-                backgroundColor: 'rgba(0,0,0,0.02)',
+                borderLeft: isMobile ? 'none' : '1px solid var(--engine-border)',
+                borderTop: isMobile ? '1px solid var(--engine-border)' : 'none',
+                backgroundColor: isMobile ? 'var(--engine-panel-bg)' : 'rgba(0,0,0,0.02)',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                position: isMobile ? 'absolute' : 'relative',
+                bottom: isMobile ? 0 : 'auto',
+                left: isMobile ? 0 : 'auto',
+                right: isMobile ? 0 : 'auto',
+                height: isMobile ? '60%' : '100%',
+                zIndex: isMobile ? 20 : 1,
+                boxShadow: isMobile ? '0 -10px 30px rgba(0,0,0,0.2)' : 'none'
               }}
             >
               <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--engine-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
