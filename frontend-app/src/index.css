@@ -116,3 +116,35 @@ a {
 @media (min-width: 769px) {
   .mobile-only { display: none !important; }
 }
+
+/* Better Markdown Code Styles */
+pre {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--engine-border);
+}
+
+[data-theme='dark'] pre {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+pre code {
+  background-color: transparent !important;
+  color: var(--engine-text-main) !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+code {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: var(--engine-text-main);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+[data-theme='dark'] code {
+  background-color: rgba(255, 255, 255, 0.1);
+}

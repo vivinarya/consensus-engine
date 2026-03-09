@@ -465,6 +465,45 @@ async def process_notes_analysis(payload: str, mode: str = 'analyze'):
             "responses": worker_results
         }
 
+async def process_career_roadmap(topic: str):
+    llama = Llama4ScoutAgent()
+    prompt = (
+        f"You are a Career Architect. Create a highly detailed career or learning roadmap for the topic: '{topic}'. "
+        f"Provide a deep breakdown of the skills required. Include real internet URLs for tutorials/resources. "
+        f"Return ONLY a perfectly formatted JSON object string matching this format:\n"
+        f"{{\n"
+        f"  \"title\": \"{topic} Course Details\",\n"
+        f"  \"desc\": \"Detailed 3-paragraph explanation.\",\n"
+        f"  \"skills\": [\"Skill 1\", \"Skill 2\", \"Skill 3\"],\n"
+        f"  \"modules\": [\"Module 1: Intro\", \"Module 2: Basics\", \"Module 3: Advanced\"],\n"
+        f"  \"resources\": [\n"
+        f"      {{\"name\": \"Resource Name\", \"url\": \"https://...\"}}\n"
+        f"  ]\n"
+        f"}}\n"
+        f"No markdown blocks, only raw JSON."
+    )
+    
+    result = await llama.generate(prompt)
+    content = result["content"]
+    import re
+    try:
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            parsed = json.loads(json_match.group())
+            parsed['id'] = topic.lower().replace(" ", "-")
+            return parsed
+    except:
+        pass
+        
+    return {
+        "id": topic.lower().replace(" ", "-"),
+        "title": f"{topic} Mastery",
+        "desc": f"Learn the core concepts, advanced techniques, and practical integrations required to master {topic}.",
+        "skills": ["Foundations", "Core Principles", "Advanced Techniques"],
+        "modules": [f"Module 1: Intro to {topic}", f"Module 2: Advanced {topic}", f"Module 3: Deploying {topic}"],
+        "resources": [{"name": f"Search Google for {topic}", "url": f"https://google.com/search?q={topic}"}]
+    }
+
 async def process_ai_analysis(payload: str, data_type: str, language: str = None):
     judge = NovaProAgent()
     if data_type == 'code_hub':
@@ -691,6 +730,13 @@ def lambda_handler(event, context):
                 return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "Code is required for execution."})}
             execution_result = asyncio.run(simulate_code_execution(code, language))
             return {"statusCode": 200, "headers": headers, "body": json.dumps({"data": execution_result})}
+            
+        elif action == "GENERATE_CAREER_ROADMAP":
+            topic = body.get("topic", "")
+            if not topic:
+                return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "Topic is required"})}
+            result = asyncio.run(process_career_roadmap(topic))
+            return {"statusCode": 200, "headers": headers, "body": json.dumps({"data": result})}
         
         else:
             return {"statusCode": 400, "headers": headers, "body": json.dumps({"error": "Unknown action"})}

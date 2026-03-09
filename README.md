@@ -1,59 +1,20 @@
 # Consensus Bedrock Engine
 
+- **URL**: [https://prototype.d3ddhsf8bhejkw.amplifyapp.com/](https://prototype.d3ddhsf8bhejkw.amplifyapp.com/)
+
 A **production-grade, multi-agent AI consensus system** built on AWS. It routes user queries to specialist worker LLMs, scores their answers across 7 quantitative metrics, and invokes a powerful Judge model only when needed — combining the speed of small models with the accuracy of frontier AI.
+
+![Consensus Frontend Preview](images/frontend_preview.png)
 
 ---
 
 ## Architecture Overview
 
-```
-User Query
-    │
-    ▼
-┌─────────────────────────────────┐
-│         Smart Router            │
-│  Coding → Llama 4 Scout         │
-│  Theory → Ministral 8B          │
-│  General → Llama 4 Scout        │
-└─────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────┐
-│     Worker LLM (Fast & Cheap)   │
-│  • Llama 4 Scout 17B (Meta)     │
-│  • Ministral 8B (Mistral AI)    │
-└─────────────────────────────────┘
-    │
-    ▼
-┌─────────────────────────────────────────────────────┐
-│              7-Metric Scoring Engine                │
-│                                                     │
-│  Metric              Weight   Method                │
-│  ─────────────────────────────────────────────────  │
-│  a. Confidence         30%    Nova Pro (API)        │
-│  b. Keyword Match      15%    Pure Python           │
-│  c. Length             10%    Pure Python           │
-│  d. Repetition         15%    Pure Python           │
-│  e. Readability        10%    Flesch-Kincaid        │
-│  f. Specificity        10%    Regex                 │
-│  g. Hallucination Def. 10%    Nova Pro (API)        │
-└─────────────────────────────────────────────────────┘
-    │
-    ├── score > 0.75 ──► VERIFIED (Return Worker Answer)
-    │
-    └── score ≤ 0.75 ──►CONFLICT RESOLVED
-                            │
-                            ▼
-                  ┌──────────────────────┐
-                  │  Amazon Nova Pro     │
-                  │  (Judge Model)       │
-                  │  Rewrites & Fixes    │
-                  └──────────────────────┘
-```
+![Consensus Engine Architecture](images/architecture_diagram.png)
 
 ---
 
-##Models
+## Models
 
 | Role | Model | Provider | Why |
 |---|---|---|---|
@@ -141,8 +102,7 @@ cdk deploy
 
 ### AWS Amplify (Frontend)
 The frontend is deployed via **AWS Amplify** for global edge delivery:
-- **URL**: [https://prototype.d2c9v8a7b6c5d4.amplifyapp.com](https://github.com/Dibya81/consensus-engine) (Replace with your actual Amplify domain)
-- **CI/CD**: Auto-deploys on every push to the `prototype` branch.
+- **CI/CD**: Auto-deploys on every push to the `main` branch.
 
 ### AWS Lambda URL (Backend)
 The terminal will print your regional endpoint after `cdk deploy`:

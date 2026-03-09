@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, Search, Archive, Plus, ArrowUp, Loader2, FileText, Image, X, Paperclip, Moon, Sun,
-  Code, TrendingUp, History, StickyNote, Home, PieChart, Folder, Settings, MessageSquare, Mic, MicOff, LogOut, Trash2
+  Code, TrendingUp, History, StickyNote, Home, PieChart, Folder, Settings, MessageSquare, Mic, MicOff, LogOut, Trash2, Users, Compass
 } from 'lucide-react';
 import styles from './EnginePage.module.css';
 import ChatMessage from '../components/ChatMessage';
@@ -11,6 +11,8 @@ import Logo from '../components/Logo';
 import NotesView from '../components/NotesView';
 import CodeHubView from '../components/CodeHubView';
 import ProgressView from '../components/ProgressView';
+import CareerView from '../components/CareerView';
+import CommunityView from '../components/CommunityView';
 
 const LAMBDA_URL = "https://6u6a3ub4qmn4qppzc7hdsnflqy0lkold.lambda-url.us-east-1.on.aws/";
 
@@ -57,6 +59,8 @@ const EnginePage = () => {
   const [currentSessionId, setCurrentSessionId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeepDiveLoading, setIsDeepDiveLoading] = useState(false);
+  const [globalStopSignal, setGlobalStopSignal] = useState(0);
+  const [isAnyTyping, setIsAnyTyping] = useState(false);
   const [greetings, setGreetings] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [showPlusMenu, setShowPlusMenu] = useState(false);
@@ -471,6 +475,16 @@ const EnginePage = () => {
     setMousePos({ x, y });
   };
 
+  const handleTouchMove = (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    const touch = e.touches[0];
+    const { clientX, clientY } = touch;
+    const { width, height } = e.currentTarget.getBoundingClientRect();
+    const x = (clientX / width) * 100;
+    const y = (clientY / height) * 100;
+    setMousePos({ x, y });
+  };
+
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert("Your browser doesn't support speech recognition. Try Google Chrome.");
@@ -567,6 +581,7 @@ const EnginePage = () => {
     <div
       className={styles.engineContainer}
       onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
       style={{
         '--mouse-x': `${mousePos.x}%`,
         '--mouse-y': `${mousePos.y}%`
@@ -631,6 +646,23 @@ const EnginePage = () => {
                 </div>
 
                 <div className={styles.navPillContainer}>
+                  {/* COMMUNITY */}
+                  <div 
+                    className={styles.navItem}
+                    onMouseEnter={() => setHoveredTab('community')}
+                    onMouseLeave={() => setHoveredTab(null)}
+                    onClick={() => { 
+                      setActiveTab('community'); 
+                      setIsNavOpen(false); 
+                    }}
+                    title="Community"
+                  >
+                    {currentTab === 'community' && (
+                      <motion.div layoutId="activeBubble" className={styles.activeBubble} transition={{ type: 'spring', stiffness: 250, damping: 20 }} />
+                    )}
+                    <Users size={22} className={styles.navIcon} style={{ color: currentTab === 'community' ? '#fff' : 'currentColor' }} />
+                  </div>
+
                   {/* PROGRESS */}
                   <div 
                     className={styles.navItem}
@@ -646,6 +678,23 @@ const EnginePage = () => {
                       <motion.div layoutId="activeBubble" className={styles.activeBubble} transition={{ type: 'spring', stiffness: 250, damping: 20 }} />
                     )}
                     <TrendingUp size={22} className={styles.navIcon} style={{ color: currentTab === 'progress' ? '#fff' : 'currentColor' }} />
+                  </div>
+
+                  {/* CAREER */}
+                  <div 
+                    className={styles.navItem}
+                    onMouseEnter={() => setHoveredTab('career')}
+                    onMouseLeave={() => setHoveredTab(null)}
+                    onClick={() => { 
+                      setActiveTab('career'); 
+                      setIsNavOpen(false); 
+                    }}
+                    title="Career Roadmaps"
+                  >
+                    {currentTab === 'career' && (
+                      <motion.div layoutId="activeBubble" className={styles.activeBubble} transition={{ type: 'spring', stiffness: 250, damping: 20 }} />
+                    )}
+                    <Compass size={22} className={styles.navIcon} style={{ color: currentTab === 'career' ? '#fff' : 'currentColor' }} />
                   </div>
 
                   {/* CODE HUB */}
@@ -788,6 +837,8 @@ const EnginePage = () => {
                       message={msg}
                       onSelect={handleSelectAnswer}
                       onDeepDive={handleDeepDive}
+                      stopSignal={globalStopSignal}
+                      onTypingStatusChange={(status) => setIsAnyTyping(status)}
                       onScroll={() => {
                         if (feedRef.current) {
                           feedRef.current.scrollTop = feedRef.current.scrollHeight;
@@ -891,9 +942,15 @@ const EnginePage = () => {
                         </AnimatePresence>
                       </div>
                     </div>
-                    <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                      <ArrowUp size={20} color={(inputValue.trim() || attachments.length > 0) ? "#fff" : "#666"} />
-                    </button>
+                    {isAnyTyping ? (
+                       <button type="button" onClick={() => setGlobalStopSignal(s => s + 1)} title="Stop Generating" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem', display: 'flex', alignItems: 'center' }}>
+                         <div style={{ width: 14, height: 14, backgroundColor: '#f43f5e', borderRadius: 2 }} />
+                       </button>
+                    ) : (
+                       <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                         <ArrowUp size={20} color={(inputValue.trim() || attachments.length > 0) ? "#text-main" : "#666"} />
+                       </button>
+                    )}
                   </div>
                 </form>
                 <input
@@ -921,6 +978,16 @@ const EnginePage = () => {
           {activeTab === 'progress' && (
             <motion.div key="progress" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} style={{ height: '100%', width: '100%' }}>
               <ProgressView username={username} />
+            </motion.div>
+          )}
+          {activeTab === 'career' && (
+            <motion.div key="career" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} style={{ height: '100%', width: '100%' }}>
+              <CareerView username={username} />
+            </motion.div>
+          )}
+          {activeTab === 'community' && (
+            <motion.div key="community" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} style={{ height: '100%', width: '100%' }}>
+              <CommunityView username={username} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1048,11 +1115,25 @@ const EnginePage = () => {
           <span>Chat</span>
         </button>
         <button 
+          className={`${styles.mobileNavItem} ${activeTab === 'community' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('community')}
+        >
+          <Users size={20} />
+          <span>Community</span>
+        </button>
+        <button 
           className={`${styles.mobileNavItem} ${activeTab === 'progress' ? styles.mobileNavItemActive : ''}`}
           onClick={() => setActiveTab('progress')}
         >
           <TrendingUp size={20} />
           <span>Insights</span>
+        </button>
+        <button 
+          className={`${styles.mobileNavItem} ${activeTab === 'career' ? styles.mobileNavItemActive : ''}`}
+          onClick={() => setActiveTab('career')}
+        >
+          <Compass size={20} />
+          <span>Career</span>
         </button>
         <button 
           className={`${styles.mobileNavItem} ${activeTab === 'notes' ? styles.mobileNavItemActive : ''}`}

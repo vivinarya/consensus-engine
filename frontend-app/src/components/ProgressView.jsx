@@ -1,349 +1,475 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, PlaySquare, Calendar, CheckSquare, Maximize2, FileText, ChevronDown, Sparkles, User, BrainCircuit } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { TrendingUp, Clock, Zap, Search, Plus, CheckCircle, Loader2, Target, Award, Trash2 } from 'lucide-react';
 
 const LAMBDA_URL = "https://6u6a3ub4qmn4qppzc7hdsnflqy0lkold.lambda-url.us-east-1.on.aws/";
 
-const MOCK_DATA = {
-  courses: [
-    { id: 1, title: 'Speak with Confidence', desc: 'Learn how to communicate clearly and confidently under pressure.', date: '27 Apr 2025', bg: 'rgba(99, 102, 241, 0.1)', border: 'rgba(99, 102, 241, 0.2)' },
-    { id: 2, title: 'Master the Basics', desc: 'Build a strong foundation in core engineering principles.', date: '30 Apr 2025', bg: 'rgba(14, 165, 233, 0.1)', border: 'rgba(14, 165, 233, 0.2)' },
-    { id: 3, title: 'Sound Like a Native', desc: 'Perfect your technical communication and natural phrasing.', date: '15 May 2025', bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.2)' }
-  ],
-  chartData: [
-    { name: 'Sun', theory: 20, practice: 30, lexicon: 25 },
-    { name: 'Mon', theory: 40, practice: 45, lexicon: 35 },
-    { name: 'Tue', theory: 60, practice: 70, lexicon: 50 },
-    { name: 'Wed', theory: 55, practice: 60, lexicon: 65 },
-    { name: 'Thu', theory: 85, practice: 95, lexicon: 80 },
-    { name: 'Fri', theory: 90, practice: 85, lexicon: 95 },
-    { name: 'Sat', theory: 70, practice: 65, lexicon: 75 },
-  ],
-  homework: [
-    { id: 1, title: 'Learn 10 new concepts today', progress: 57, color: '#3b82f6', icon: 'file' },
-    { id: 2, title: 'Do 1 system design task', progress: 42, color: '#06b6d4', icon: 'check' },
-    { id: 3, title: 'Watch a video, take notes', progress: 31, color: '#10b981', icon: 'play' },
-    { id: 4, title: 'Write 3 architecture drafts', progress: 84, color: '#8b5cf6', icon: 'file' }
-  ],
-  friends: [
-    { id: 1, name: 'Anna Morgan', score: '10,568', hours: 832, tasks: 48, avatar: 'https://i.pravatar.cc/150?u=11' },
-    { id: 2, name: 'Jake Thompson', score: '10,234', hours: 778, tasks: 39, avatar: 'https://i.pravatar.cc/150?u=12' },
-    { id: 3, name: 'Sofia Bennett', score: '9,892', hours: 742, tasks: 33, avatar: 'https://i.pravatar.cc/150?u=13' },
-    { id: 4, name: 'Emily Carter', score: '9,322', hours: 643, tasks: 28, avatar: 'https://i.pravatar.cc/150?u=14' }
-  ]
-};
-
 const ProgressView = ({ username }) => {
-  const [data, setData] = useState(MOCK_DATA);
+  const [topics, setTopics] = useState([]);
+  const [newTopic, setNewTopic] = useState('');
+  const [recommendation, setRecommendation] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [aiAnalysis, setAiAnalysis] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const [activeTab, setActiveTab] = useState('in-progress');
 
   useEffect(() => {
     fetchProgress();
   }, [username]);
 
   const fetchProgress = async () => {
-    setIsLoading(true);
     try {
       const response = await fetch(LAMBDA_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'GET_USER_DATA', username, data_type: 'progress_dash' })
+        body: JSON.stringify({ action: 'GET_USER_DATA', username, data_type: 'learning_progress_topics' })
       });
-      const res = await response.json();
-      
-      let currentData = MOCK_DATA;
-      if (res.data && res.data.courses) {
-        currentData = res.data;
-        setData(res.data);
-      } else {
-        // Seed default
-        await fetch(LAMBDA_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'SAVE_USER_DATA', username, data_type: 'progress_dash', payload: MOCK_DATA })
-        });
+      const data = await response.json();
+      if (data.data && Array.isArray(data.data)) {
+        setTopics(data.data);
+        if (data.data.length > 0) {
+          generateRecommendation(data.data);
+        }
       }
-
-      // Automatically trigger AI analysis
-      triggerAIAnalysis(currentData);
-
     } catch (e) {
-      console.error(e);
-      triggerAIAnalysis(MOCK_DATA);
+      console.error("Failed to load progress", e);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const triggerAIAnalysis = async (currentData) => {
-    setIsAiLoading(true);
+  const saveProgress = async (updatedTopics) => {
     try {
-      const payloadString = `Courses: ${currentData.courses.length}, Homework Avg Completion: ${Math.round(currentData.homework.reduce((acc, curr) => acc + curr.progress, 0) / currentData.homework.length)}%`;
+      await fetch(LAMBDA_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SAVE_USER_DATA',
+          username,
+          data_type: 'learning_progress_topics',
+          payload: updatedTopics
+        })
+      });
+    } catch (e) {
+      console.error("Error saving progress:", e);
+    }
+  };
+
+  const handleAddTopic = async (e) => {
+    e.preventDefault();
+    if (!newTopic.trim()) return;
+
+    const topicEntry = {
+      id: Date.now().toString(),
+      name: newTopic,
+      completed: false,
+      dateAdded: new Date().toLocaleDateString()
+    };
+
+    const updatedTopics = [topicEntry, ...topics];
+    setTopics(updatedTopics);
+    setNewTopic('');
+
+    await saveProgress(updatedTopics);
+    generateRecommendation(updatedTopics);
+  };
+
+  const toggleTopicComplete = async (id) => {
+    const updatedTopics = topics.map(t =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    );
+    setTopics(updatedTopics);
+    await saveProgress(updatedTopics);
+  };
+
+  const deleteTopic = async (id) => {
+    const updatedTopics = topics.filter(t => t.id !== id);
+    setTopics(updatedTopics);
+    await saveProgress(updatedTopics);
+    generateRecommendation(updatedTopics);
+  };
+
+  const generateRecommendation = async (currentTopics) => {
+    if (currentTopics.length === 0) return;
+    setIsAnalyzing(true);
+
+    const topicNames = currentTopics.map(t => `${t.name} (${t.completed ? 'Completed' : 'In Progress'})`).join(', ');
+    const payload = `User's Topics: ${topicNames}`;
+
+    try {
       const response = await fetch(LAMBDA_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'ANALYZE_DATA', data_type: 'progress', payload: payloadString })
+        body: JSON.stringify({
+          action: 'ANALYZE_DATA',
+          username,
+          data_type: 'progress',
+          payload: payload
+        })
       });
-      const res = await response.json();
-      if (res.data && res.data.content) {
-        setAiAnalysis(res.data.content);
+      const data = await response.json();
+      if (data.data && data.data.content) {
+        setRecommendation(data.data.content);
       }
     } catch (e) {
-      console.error(e);
-      setAiAnalysis("Excellent work maintaining a consistent schedule this week! Focus heavily on 'System Design' for your next milestone.");
+      console.error("Recommendation failed", e);
     } finally {
-      setIsAiLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div style={{ background: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', padding: '0.75rem', borderRadius: '12px', boxShadow: '0 8px 25px rgba(0,0,0,0.1)' }}>
-          <p style={{ margin: 0, fontWeight: 600, color: 'var(--engine-text-main)', marginBottom: '0.5rem' }}>{label}</p>
-          {payload.map((entry, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--engine-text-muted)', marginBottom: '4px' }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: entry.color }} />
-              <span style={{ textTransform: 'capitalize' }}>{entry.name}:</span>
-              <span style={{ fontWeight: 'bold' }}>{entry.value}%</span>
-            </div>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  if (isLoading) {
-    return (
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--engine-text-muted)' }}>
-        <Loader2 size={32} className="spin" />
-        <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
-  }
+  const completedCount = topics.filter(t => t.completed).length;
+  const progressRatio = topics.length > 0 ? Math.round((completedCount / topics.length) * 100) : 0;
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="progress-container"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       style={{
         flex: 1,
-        padding: '2rem',
-        paddingTop: '6rem',
+        padding: 'clamp(4rem,8vw,5rem) clamp(1rem,4vw,3rem) 2rem clamp(1rem,4vw,3rem)',
         display: 'flex',
-        flexWrap: 'wrap',
-        gap: '2rem',
+        flexDirection: 'column',
+        gap: '1.5rem',
+        maxWidth: '1200px',
+        margin: '0 auto',
+        width: '100%',
         height: '100%',
-        boxSizing: 'border-box',
-        overflowY: 'auto',
-        overflowX: 'hidden'
+        overflowY: 'auto'
       }}
     >
+      <div className="progress-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', margin: 0, color: 'var(--engine-text-main)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: 'clamp(1.4rem,4vw,2rem)', whiteSpace: 'nowrap' }}>
+          <TrendingUp size={24} color="var(--engine-accent)" /> Learning Progress
+        </h1>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+        {/* Top Banner */}
+        <div className="progress-banner" style={{
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          backgroundColor: 'var(--engine-panel-bg)',
+          border: '1px solid var(--engine-border)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '2rem 3rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }}>
+
+          {/* Consistency */}
+          <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h3 style={{ margin: '0 0 2rem 0', color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>Account Standing</h3>
+
+            <div style={{ display: 'flex', gap: '3rem', justifyContent: 'center', width: '100%' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{topics.length}</span>
+                  <Target size={32} color="var(--engine-accent)" />
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>TOTAL TOPICS</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{completedCount}</span>
+                  <Award size={32} color="#eab308" />
+                </div>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--engine-text-muted)', letterSpacing: '1px' }}>COMPLETED</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ width: '1px', backgroundColor: 'var(--engine-border)' }} />
+
+          {/* Progress Distribution */}
+          <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <h3 style={{ margin: '0 0 2rem 0', color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>Mastery Progress</h3>
+
+            <div style={{
+              position: 'relative',
+              width: '120px',
+              height: '120px',
+              borderRadius: '50%',
+              backgroundImage: `conic-gradient(var(--engine-accent) ${progressRatio}%, transparent 0)`,
+              backgroundColor: 'var(--engine-panel-bg)',
+              border: '1px solid var(--engine-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'inset 0 0 0 8px var(--engine-panel-bg), 0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+            }}>
+              <div style={{
+                width: '104px',
+                height: '104px',
+                borderRadius: '50%',
+                backgroundColor: 'var(--engine-panel-bg)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 10px rgba(0,0,0,0.05)'
+              }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--engine-text-main)' }}>{progressRatio}%</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Bottom Grid */}
+        <div className="progress-bottom-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+
+          {/* Recent Activity */}
+          <div style={{
+            backgroundColor: 'var(--engine-panel-bg)',
+            border: '1px solid var(--engine-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '2rem',
+            minHeight: '200px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <div className="course-tab-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Clock size={20} color="var(--engine-accent)" />
+                <h3 style={{ margin: 0, color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>Your Courses</h3>
+              </div>
+              <div className="course-tab-container-right" style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'var(--engine-bg-color)', padding: '0.25rem', borderRadius: '8px', border: '1px solid var(--engine-border)' }}>
+                <button
+                  onClick={() => setActiveTab('in-progress')}
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: activeTab === 'in-progress' ? 'var(--engine-panel-bg)' : 'transparent',
+                    color: activeTab === 'in-progress' ? 'var(--engine-text-main)' : 'var(--engine-text-muted)',
+                    boxShadow: activeTab === 'in-progress' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  In Progress
+                </button>
+                <button
+                  onClick={() => setActiveTab('completed')}
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    backgroundColor: activeTab === 'completed' ? 'var(--engine-panel-bg)' : 'transparent',
+                    color: activeTab === 'completed' ? 'var(--engine-text-main)' : 'var(--engine-text-muted)',
+                    boxShadow: activeTab === 'completed' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Completed
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddTopic} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{
+                flex: 1,
+                backgroundColor: 'color-mix(in srgb, var(--engine-text-muted) 10%, transparent)',
+                border: '1px solid var(--engine-border)',
+                borderRadius: '8px',
+                padding: '0.5rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Search size={16} color="var(--engine-text-muted)" />
+                <input
+                  type="text"
+                  placeholder="Search and add a topic..."
+                  value={newTopic}
+                  onChange={(e) => setNewTopic(e.target.value)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: 'var(--engine-text-main)',
+                    width: '100%',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!newTopic.trim()}
+                style={{
+                  backgroundColor: 'var(--engine-accent)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#fff',
+                  padding: '0 1rem',
+                  fontWeight: 600,
+                  cursor: !newTopic.trim() ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  opacity: !newTopic.trim() ? 0.5 : 1
+                }}
+              >
+                <Plus size={18} />
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflowY: 'auto', flex: 1, maxHeight: '350px' }}>
+              {isLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+                  <Loader2 size={24} className="spin" color="var(--engine-text-muted)" />
+                </div>
+              ) : topics.filter(t => activeTab === 'in-progress' ? !t.completed : t.completed).length === 0 ? (
+                <p style={{ color: 'var(--engine-text-muted)', fontSize: '0.9rem', textAlign: 'center', marginTop: '1rem' }}>
+                  {activeTab === 'in-progress' ? "No courses in progress. Search and add one to get started!" : "No completed courses yet. Keep learning!"}
+                </p>
+              ) : (
+                <AnimatePresence>
+                  {topics.filter(t => activeTab === 'in-progress' ? !t.completed : t.completed).map(topic => (
+                    <motion.div
+                      key={topic.id}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem',
+                        backgroundColor: 'color-mix(in srgb, var(--engine-text-muted) 5%, transparent)',
+                        border: '1px solid var(--engine-border)',
+                        borderRadius: '8px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                        <span style={{ color: 'var(--engine-text-main)', fontWeight: 500, fontSize: '0.95rem', textDecoration: topic.completed ? 'line-through' : 'none', opacity: topic.completed ? 0.6 : 1 }}>
+                          {topic.name}
+                        </span>
+                        <span style={{ color: 'var(--engine-text-muted)', fontSize: '0.75rem' }}>Added: {topic.dateAdded}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                          onClick={() => toggleTopicComplete(topic.id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: topic.completed ? '#22c55e' : 'var(--engine-text-muted)',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0.4rem',
+                            borderRadius: '50%',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.05)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          title={topic.completed ? "Mark as Incomplete" : "Mark as Completed"}
+                        >
+                          <CheckCircle size={20} />
+                        </button>
+                        <button
+                          onClick={() => deleteTopic(topic.id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#f43f5e',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '0.4rem',
+                            borderRadius: '50%',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(244, 63, 94, 0.1)'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          title="Delete Course"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </div>
+
+          {/* AI Recommendation */}
+          <div style={{
+            backgroundColor: 'var(--engine-panel-bg)',
+            border: '1px solid var(--engine-border)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '2rem',
+            minHeight: '200px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+              <Zap size={20} color="var(--engine-accent)" />
+              <h3 style={{ margin: 0, color: 'var(--engine-text-main)', fontSize: '1.1rem', fontWeight: 600 }}>AI Roadmap Recommendation</h3>
+              {isAnalyzing && <Loader2 size={16} className="spin" color="var(--engine-accent)" style={{ marginLeft: 'auto' }} />}
+            </div>
+
+            <div style={{
+              backgroundColor: 'color-mix(in srgb, var(--engine-accent) 15%, transparent)',
+              border: '1px solid var(--engine-border)',
+              borderRadius: '8px',
+              padding: '1.5rem',
+              flex: 1,
+              overflowY: 'auto'
+            }}>
+              <p style={{ margin: 0, color: 'var(--engine-text-main)', fontSize: '0.95rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                {recommendation || "Add some topics to your recent activity to get a personalized AI learning roadmap prediction!"}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
       <style>{`
-        .progress-container {
-          flex-direction: row;
-        }
-        .progress-sidebar {
-           width: 320px;
-        }
-        .progress-stats-grid {
-           grid-template-columns: repeat(3, 1fr);
-        }
-        @media (max-width: 1100px) {
-          .progress-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
+        .spin { animation: spin 1s linear infinite; } 
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Slim, matching scrollbar for the right side */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--engine-border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--engine-text-muted); }
+        
         @media (max-width: 768px) {
-          .progress-container {
-            padding: 1rem !important;
-            padding-top: 5rem !important;
+          .progress-banner {
+            padding: 1.5rem 1rem !important;
             flex-direction: column !important;
+            align-items: center !important;
           }
-          .progress-sidebar {
-            width: 100% !important;
-          }
-          .progress-stats-grid {
+          .progress-bottom-grid {
             grid-template-columns: 1fr !important;
+          }
+          .course-tab-container {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+          }
+          .course-tab-container-right {
+            width: 100% !important;
+            justify-content: space-between !important;
+          }
+          .course-tab-container-right button {
+            flex: 1 !important;
           }
         }
       `}</style>
-      
-      {/* LEFT SIDEBAR - Select a Course */}
-      <div className="progress-sidebar" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h2 style={{ fontSize: '1.75rem', margin: 0, color: 'var(--engine-text-main)', fontWeight: 600 }}>Select a course</h2>
-            <p style={{ color: 'var(--engine-text-muted)', fontSize: '0.9rem', marginTop: '0.25rem' }}>Start learning today.</p>
-          </div>
-          <button style={{ background: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', padding: '0.5rem', borderRadius: '50%', color: 'var(--engine-text-main)', cursor: 'pointer' }}>
-            <Maximize2 size={16} />
-          </button>
-        </div>
-
-        <div style={{ position: 'relative' }}>
-          <Search size={18} color="var(--engine-text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-          <input 
-            type="text" 
-            placeholder="Search courses..." 
-            style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 2.75rem', borderRadius: '99px', border: '1px solid var(--engine-border)', backgroundColor: 'var(--engine-panel-bg)', color: 'var(--engine-text-main)', fontSize: '0.9rem', outline: 'none' }} 
-          />
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {data.courses.map((course) => (
-            <motion.div 
-              key={course.id}
-              whileHover={{ scale: 1.02 }}
-              style={{
-                backgroundColor: course.bg,
-                border: `1px solid ${course.border}`,
-                borderRadius: '24px',
-                padding: '1.25rem',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1rem'
-              }}
-            >
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--engine-text-main)', fontWeight: 600 }}>{course.title}</h3>
-                <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: 'var(--engine-text-muted)', lineHeight: 1.4 }}>{course.desc}</p>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(0,0,0,0.05)', padding: '0.4rem 0.75rem', borderRadius: '99px', fontSize: '0.75rem', fontWeight: 500, color: 'var(--engine-text-main)' }}>
-                  <Calendar size={14} /> {course.date}
-                </div>
-                <div style={{ display: 'flex' }}>
-                   <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#fca5a5', border: '2px solid var(--engine-bg-color)', zIndex: 2 }}></div>
-                   <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: '#93c5fd', border: '2px solid var(--engine-bg-color)', marginLeft: '-10px', zIndex: 1 }}></div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT MAIN AREA */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: 0 }}>
-        
-        {/* ROW 1: PERFORMANCE CHART */}
-        <div style={{ backgroundColor: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', borderRadius: '24px', padding: '1.5rem', flex: '1 1 auto', minHeight: '300px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.5rem', margin: 0, color: 'var(--engine-text-main)', fontWeight: 600 }}>Performance Chart</h2>
-              <p style={{ color: 'var(--engine-text-muted)', fontSize: '0.9rem', margin: '0.25rem 0 1rem 0' }}>Track results and watch your progress rise.</p>
-              
-              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.85rem', color: 'var(--engine-text-main)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CircleDot color="#3b82f6" /> Theory</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CircleDot color="#8b5cf6" /> Practice</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><CircleDot color="#f43f5e" /> Lexicon</div>
-              </div>
-            </div>
-            
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: '1px solid var(--engine-border)', padding: '0.5rem 1rem', borderRadius: '99px', color: 'var(--engine-text-main)', fontSize: '0.9rem', cursor: 'pointer' }}>
-                Weekly <ChevronDown size={14} />
-              </button>
-              <button style={{ background: 'transparent', border: '1px solid var(--engine-border)', padding: '0.5rem', borderRadius: '50%', color: 'var(--engine-text-main)', cursor: 'pointer' }}>
-                <Maximize2 size={16} />
-              </button>
-            </div>
-          </div>
-          
-          <div className="chart-container" style={{ width: '100%', minHeight: '350px', position: 'relative', marginTop: '1rem', backgroundColor: 'rgba(0,0,0,0.02)', borderRadius: '16px', padding: '10px', border: '1px solid var(--engine-border)' }}>
-            <ResponsiveContainer width="100%" height={320} debounce={200}>
-              <LineChart data={data.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--engine-text-muted)', fontSize: 12 }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--engine-text-muted)', fontSize: 12 }} dx={-10} tickFormatter={(val) => `${val}%`} />
-                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--engine-border)', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                <Line type="monotone" dataKey="theory" stroke="#3b82f6" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="practice" stroke="#8b5cf6" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#8b5cf6', stroke: '#fff', strokeWidth: 2 }} />
-                <Line type="monotone" dataKey="lexicon" stroke="#f43f5e" strokeWidth={3} dot={false} activeDot={{ r: 6, fill: '#f43f5e', stroke: '#fff', strokeWidth: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-        </div>
-
-        {/* ROW 2: HOMEWORK, FRIENDS SCORE, AI COACH */}
-        <div className="progress-stats-grid" style={{ display: 'grid', gap: '1.5rem', flex: '0 0 auto' }}>
-          
-          {/* Homework Card */}
-          <div style={{ backgroundColor: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', borderRadius: '24px', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--engine-text-main)', fontWeight: 600 }}>Homework</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--engine-text-muted)' }}>Check and complete tasks</p>
-              </div>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'transparent', border: '1px solid var(--engine-border)', padding: '0.35rem 0.75rem', borderRadius: '99px', color: 'var(--engine-text-main)', fontSize: '0.8rem', cursor: 'pointer' }}>
-                Day <ChevronDown size={14} />
-              </button>
-            </div>
-            
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--engine-bg-color)', border: '1px dashed var(--engine-border)', borderRadius: '16px', padding: '2rem', gap: '0.75rem', minHeight: '150px' }}>
-              <div style={{ background: 'var(--engine-panel-bg)', padding: '0.75rem', borderRadius: '50%', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <Sparkles size={24} color="var(--engine-text-muted)" />
-              </div>
-              <p style={{ margin: 0, color: 'var(--engine-text-muted)', fontSize: '0.95rem', fontWeight: 500 }}>Upcoming Feature</p>
-            </div>
-          </div>
-
-          {/* Friends Score Card */}
-          <div style={{ backgroundColor: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', borderRadius: '24px', padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--engine-text-main)', fontWeight: 600 }}>Friends Score</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--engine-text-muted)' }}>See how you rank</p>
-              </div>
-              <button style={{ background: 'transparent', border: '1px solid var(--engine-border)', padding: '0.35rem 0.75rem', borderRadius: '99px', color: 'var(--engine-text-main)', fontSize: '0.8rem', cursor: 'pointer' }}>
-                All
-              </button>
-            </div>
-            
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--engine-bg-color)', border: '1px dashed var(--engine-border)', borderRadius: '16px', padding: '2rem', gap: '0.75rem', minHeight: '150px' }}>
-              <div style={{ background: 'var(--engine-panel-bg)', padding: '0.75rem', borderRadius: '50%', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <Sparkles size={24} color="var(--engine-text-muted)" />
-              </div>
-              <p style={{ margin: 0, color: 'var(--engine-text-muted)', fontSize: '0.95rem', fontWeight: 500 }}>Upcoming Feature</p>
-            </div>
-          </div>
-
-          {/* AI Coach Card */}
-          <div style={{ backgroundColor: 'var(--engine-panel-bg)', border: '1px solid var(--engine-border)', borderRadius: '24px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ background: 'linear-gradient(135deg, var(--engine-accent), #ed8936)', padding: '0.4rem', borderRadius: '12px' }}>
-                <BrainCircuit size={18} color="#fff" />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--engine-text-main)', fontWeight: 600 }}>AI Coach</h3>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--engine-text-muted)' }}>Powered by AWS Bedrock</p>
-              </div>
-            </div>
-            
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--engine-bg-color)', border: '1px dashed var(--engine-border)', borderRadius: '16px', padding: '2rem', gap: '0.75rem', minHeight: '150px' }}>
-              <div style={{ background: 'var(--engine-panel-bg)', padding: '0.75rem', borderRadius: '50%', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-                <Sparkles size={24} color="var(--engine-text-muted)" />
-              </div>
-              <p style={{ margin: 0, color: 'var(--engine-text-muted)', fontSize: '0.95rem', fontWeight: 500 }}>Upcoming Feature</p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
     </motion.div>
   );
 };
-
-// Helper component for small circles in legend
-const CircleDot = ({ color }) => (
-  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color }} />
-);
 
 export default ProgressView;

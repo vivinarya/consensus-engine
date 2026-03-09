@@ -3,9 +3,17 @@ import ReactMarkdown from 'react-markdown';
 import { CheckCircle, Cpu, ShieldCheck, Paperclip, HelpCircle, Sparkles, Loader2, ArrowRight, Zap } from 'lucide-react';
 import styles from './ChatMessage.module.css';
 
-const TypewriterAI = ({ content, speed = 10, onComplete, onChar }) => {
+const TypewriterAI = ({ content, speed = 10, onComplete, onChar, stopSignal }) => {
   const [displayedContent, setDisplayedContent] = useState('');
   const startTimeRef = React.useRef(null);
+  
+  // Instantly finish if stopSignal exists and is > 0
+  useEffect(() => {
+    if (stopSignal > 0 && displayedContent.length < content.length) {
+      setDisplayedContent(content);
+      if (onComplete) onComplete();
+    }
+  }, [stopSignal, content, displayedContent, onComplete]);
 
   useEffect(() => {
     startTimeRef.current = Date.now();
@@ -35,7 +43,7 @@ const TypewriterAI = ({ content, speed = 10, onComplete, onChar }) => {
   return <ReactMarkdown>{displayedContent}</ReactMarkdown>;
 };
 
-const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
+const ChatMessage = ({ message, onSelect, onDeepDive, onScroll, stopSignal, onTypingStatusChange }) => {
   const [isTyping, setIsTyping] = useState(!message.hasTyped && message.role === 'ai');
   const isUser = message.role === 'user';
   
@@ -43,6 +51,10 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
     setIsTyping(false);
     message.hasTyped = true;
   };
+
+  useEffect(() => {
+    if (onTypingStatusChange) onTypingStatusChange(isTyping);
+  }, [isTyping, onTypingStatusChange]);
 
   // Auto-scroll handler passed from parent
   const handleCharTyped = () => {
@@ -85,6 +97,7 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
               <TypewriterAI 
                 content={message.content} 
                 speed={5} // Fast for deep dive
+                stopSignal={stopSignal}
                 onComplete={handleTypingComplete} 
                 onChar={handleCharTyped}
               />
@@ -114,6 +127,7 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
               <TypewriterAI 
                 content={message.content} 
                 speed={5} // Fast for Judge
+                stopSignal={stopSignal}
                 onComplete={handleTypingComplete} 
                 onChar={handleCharTyped}
               />
@@ -166,6 +180,7 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
                     <TypewriterAI 
                         content={resp.content} 
                         speed={5} 
+                        stopSignal={stopSignal}
                         onComplete={idx === message.responses.length - 1 ? handleTypingComplete : null} 
                         onChar={handleCharTyped}
                     />
@@ -224,6 +239,7 @@ const ChatMessage = ({ message, onSelect, onDeepDive, onScroll }) => {
             <TypewriterAI 
                 content={message.content} 
                 speed={5} 
+                stopSignal={stopSignal}
                 onComplete={handleTypingComplete} 
                 onChar={handleCharTyped}
             />
